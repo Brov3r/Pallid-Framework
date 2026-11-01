@@ -418,6 +418,17 @@ local function installHook(playerNum, player)
         updateHook(self)
     end
 
+    --- Returns a stable debug name for this element.
+    ---
+    --- Without it, `UIElement.toString()` would convert this table and follow the
+    --- `element` reference back into the same UIElement, overflowing the stack
+    --- when the game lists visible UI, for example on the escape menu.
+    ---@param self table Installed MoodlesUI table.
+    ---@return string text Debug name of this element.
+    installed.tostring = function(self)
+        return "PallidMoodlesUI[" .. tostring(self.playerNum) .. "]"
+    end
+
     local hook = {
         playerNum            = playerNum,
         element              = element,

@@ -6,6 +6,7 @@ A Project Zomboid Build 42 library for networking, UI widgets, drawing, animatio
 | --- | --- |
 | Logging helpers and the `PallidLogger` class | [logger.md](logger.md) |
 | Client/server message layer `Pallid.Net` | [net.md](net.md) |
+| Guarded subscriptions over the game's `Events` table `Pallid.Events` | [events.md](events.md) |
 | Custom traits | [gameplay-traits.md](gameplay-traits.md) |
 | Custom professions | [gameplay-professions.md](gameplay-professions.md) |
 | Custom moodles, renderer and multiplayer state | [gameplay-moodles.md](gameplay-moodles.md) |
