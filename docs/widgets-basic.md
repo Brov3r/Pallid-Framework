@@ -760,6 +760,6 @@ rich:setText("{c=#E8D4A2}Warning{/c}: low fuel.")
 - Italic is not supported: the game has no oblique bitmap face.
 - The colour tag accepts 6 or 8 hex digits and an optional `#`. An invalid value keeps the current colour but still consumes its `{/c}`.
 - `{icon=...}` takes a registered icon name or a path containing `/`.
-- Links are always underlined; clicking one calls `onLink(rich, url)`, otherwise the URL is opened with `Pallid.UI.openUrl` (non-Indie Stone URLs are copied to the clipboard).
+- Links are always underlined; clicking one calls `onLink(rich, url)`, otherwise the URL is opened with `Pallid.UI.openUrl` (non-Indie Stone URLs are copied to the clipboard and a toast with the `link.png` icon reports it).
 - Newlines start a new line, words wrap at the widget width, and overlong words are split at UTF-8 boundaries.
 - `measuredSize()` forces a layout and returns the content width and height.

@@ -16,6 +16,9 @@ local I = Pallid.UI._internal
 local RECT_SHAPE = Pallid.UI.Shape.rect()
 local ICON_OPTS = { mode = "fit" }
 
+--- Icon shown in the default link-result toast.
+local LINK_ICON = "link.png"
+
 --- Returns the byte length of a UTF-8 sequence from its first byte.
 --- @param byte integer First byte of a UTF-8 sequence.
 --- @return integer length Sequence length in bytes.
@@ -874,9 +877,11 @@ function RichText:onUp(px, py)
             if root ~= nil then
                 local text = I.translate("UI_Pallid_LinkCopied", "Link copied to clipboard")
                 Widgets.toast(text, {
-                    corner = "bottom-right",
+                    corner   = "bottom-right",
                     duration = 2.5,
-                    accent = Pallid.UI.Color.warning,
+                    accent   = Pallid.UI.Color.warning,
+                    icon     = LINK_ICON,
+                    iconSize = 16,
                 }):show(root)
             end
         end
