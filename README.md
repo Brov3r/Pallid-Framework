@@ -13,11 +13,6 @@ animation helpers, and shared utilities exposed through the single `Pallid` glob
 Copy the `pallid-framework` folder into your Zomboid `mods` directory and enable
 **Pallid Framework** in the in-game mod list.
 
-## Structure
-
-- `42/` — Build 42 files: Lua modules, UI assets, and translations (`EN`, `RU`).
-- `common/` — placeholder for older Build 42 versions.
-
 ## Usage
 
 Lua modules are loaded by the game from `42/media/lua/{client,server,shared}/`.
