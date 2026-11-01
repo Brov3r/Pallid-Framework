@@ -112,16 +112,19 @@ function Host:shutdown()
     self:removeFromUIManager()
 end
 
+--- Returns the cursor X position in host-local pixels.
 --- @return number x Cursor X in host-local pixels.
 function Host:mouseX()
     return self:getMouseX()
 end
 
+--- Returns the cursor Y position in host-local pixels.
 --- @return number y Cursor Y in host-local pixels.
 function Host:mouseY()
     return self:getMouseY()
 end
 
+--- Dispatches a left button press to the root widget.
 --- @param x number Cursor X in host-local pixels.
 --- @param y number Cursor Y in host-local pixels.
 --- @return boolean handled True when a widget consumed the press.
@@ -133,6 +136,7 @@ function Host:onMouseDown(x, y)
     return root:mouseDown(self:mouseX(), self:mouseY(), "left")
 end
 
+--- Dispatches a left button release to the root widget.
 --- @param x number Cursor X in host-local pixels.
 --- @param y number Cursor Y in host-local pixels.
 --- @return boolean handled True when the active capture received the release.
@@ -144,6 +148,7 @@ function Host:onMouseUp(x, y)
     return root:mouseUp(self:mouseX(), self:mouseY(), "left")
 end
 
+--- Dispatches a right button press to the root widget and remembers the result.
 --- @param x number Cursor X in host-local pixels.
 --- @param y number Cursor Y in host-local pixels.
 --- @return boolean handled True when a widget consumed the press.
@@ -157,6 +162,7 @@ function Host:onRightMouseDown(x, y)
     return handled
 end
 
+--- Dispatches a right button release and clears the pending right press flag.
 --- @param x number Cursor X in host-local pixels.
 --- @param y number Cursor Y in host-local pixels.
 --- @return boolean handled True when the active capture or the pending right press consumed the release.
@@ -170,6 +176,7 @@ function Host:onRightMouseUp(x, y)
     return root:mouseUp(self:mouseX(), self:mouseY(), "right") or handled
 end
 
+--- Dispatches cursor movement to the root widget.
 --- @param dx number Cursor movement X in pixels.
 --- @param dy number Cursor movement Y in pixels.
 --- @return boolean handled True when a widget is hovered inside the tree.
@@ -181,6 +188,7 @@ function Host:onMouseMove(dx, dy)
     return root:mouseMove(self:mouseX(), self:mouseY())
 end
 
+--- Dispatches a mouse wheel step to the root widget.
 --- @param del number Wheel steps; positive is up.
 --- @return boolean handled True when the tree consumed the wheel.
 function Host:onMouseWheel(del)

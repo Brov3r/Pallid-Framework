@@ -72,6 +72,10 @@ function NumberStepper.new(x, y, w, h, opts)
     local self = setmetatable({}, NumberStepper)
     self:init(x, y, w, h)
 
+    --- Returns a value when it is a real number, otherwise the fallback.
+    --- @param value any Candidate value.
+    --- @param fallback number Value used when the candidate is not a number.
+    --- @return number value The candidate or the fallback.
     local function numberOr(value, fallback)
         if type(value) == "number" and value == value then
             return value

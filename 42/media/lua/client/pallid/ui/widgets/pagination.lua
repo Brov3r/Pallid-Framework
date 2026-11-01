@@ -93,6 +93,9 @@ function Pagination:_rebuild()
     self.page = page
     local limit = math.max(1, self.maxButtons)
 
+    --- Appends one slot descriptor to the layout being built.
+    --- @param kind string Slot kind: "page" or "ellipsis".
+    --- @param value integer|nil Page number used by page slots.
     local function add(kind, value)
         slots[#slots + 1] = {
             kind  = kind,

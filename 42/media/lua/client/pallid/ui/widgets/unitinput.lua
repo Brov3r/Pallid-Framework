@@ -89,6 +89,7 @@ function Widgets.unitInput(x, y, w, h, opts)
     return UnitInput.new(x, y, w, h, opts)
 end
 
+--- Builds the combo labels for the configured units.
 --- @return string[] labels Unit labels in order.
 function UnitInput:_unitLabels()
     local labels = {}
@@ -146,6 +147,7 @@ function UnitInput:setUnits(units, unit, silent)
     return self
 end
 
+--- Returns the descriptor of the selected unit.
 --- @return table unit Selected unit descriptor.
 function UnitInput:getUnit()
     return self.units[self.unitIndex]
@@ -179,6 +181,7 @@ function UnitInput:setUnit(unit, silent)
     return self
 end
 
+--- Returns the factor of the selected unit, or 1 without one.
 --- @return number factor Selected unit factor.
 function UnitInput:_factor()
     local unit = self.units[self.unitIndex]
@@ -240,6 +243,7 @@ function UnitInput:setValue(value, silent)
     return self
 end
 
+--- Returns the base value, independent of the selected unit.
 --- @return number value Base value.
 function UnitInput:getValue()
     return self.value

@@ -51,6 +51,7 @@ for i = 0, HUE_STEPS - 1 do
     HUE_COLORS[i + 1] = Color.fromHSV((i + 0.5) / HUE_STEPS * 360, 1, 1, 1)
 end
 
+--- Clamps a number into the 0..1 range.
 --- @param value number Value to process.
 --- @return number clamped Value limited to 0..1.
 local function clamp01(value)
@@ -63,12 +64,14 @@ local function clamp01(value)
     return value
 end
 
+--- Converts a 0..1 color component into a rounded 0..255 byte.
 --- @param value number Color component in 0..1.
 --- @return integer byte Component rounded to 0..255.
 local function byteOf(value)
     return math.floor(clamp01(value or 0) * 255 + 0.5)
 end
 
+--- Converts an RGB color into hue, saturation and value components.
 --- @param color PallidColor Color to use.
 --- @return number h Hue in degrees, 0..360.
 --- @return number s Saturation, 0..1.
@@ -99,6 +102,7 @@ local function rgbToHsv(color)
     return h, s, maxc
 end
 
+--- Creates a clamped, independent copy of a color.
 --- @param color PallidColor Color to copy.
 --- @return PallidColor copy Clamped independent copy.
 local function copyColor(color)
@@ -110,6 +114,7 @@ local function copyColor(color)
     }
 end
 
+--- Draws the checkerboard backdrop that makes alpha visible.
 --- @param el ISUIElement Host element.
 --- @param x number Left edge.
 --- @param y number Top edge.
@@ -134,6 +139,7 @@ local function cellSpan(start, total, parts, index)
     return start + a, math.max(1, b - a)
 end
 
+--- Computes the panel offset of a palette swatch cell.
 --- @param index integer 1-based palette index.
 --- @return number x Left offset inside the panel.
 --- @return number y Top offset inside the panel.
@@ -154,7 +160,7 @@ end
 --- @field value number Current value, 0..1.
 --- @field alphaValue number Current alpha, 0..1.
 --- @field dragging string|nil Active region: "sv", "hue", "alpha" or nil.
---- @field onChange fun(panel: PallidColorPickerPanel, color: PallidColor)|nil
+--- @field onChange fun(panel: PallidColorPickerPanel, color: PallidColor)|nil Called with the panel and its updated color.
 local Panel = Widgets.class("ColorPickerPanel")
 
 --- Panel width in pixels, used by the owning popover.
@@ -167,6 +173,8 @@ Panel.HEIGHT = PANEL_H
 --- @param handler fun(panel: PallidColorPickerPanel) Callback owned by the panel.
 local function installBlur(input, handler)
     local base = input.onBlur
+    --- Runs the original blur handler and then the panel's canonicalizer.
+    --- @param selfInput PallidInputBase Input that lost focus.
     input.onBlur = function(selfInput)
         base(selfInput)
         local panel = selfInput.parent
@@ -380,6 +388,7 @@ function Panel:syncInputs(skipKey, force)
     end
 end
 
+--- Updates the hex field border to reflect whether the text parses.
 --- @param valid boolean True when the hex text parses.
 function Panel:_setHexValid(valid)
     if self._hexValid == valid then
@@ -389,6 +398,7 @@ function Panel:_setHexValid(valid)
     self.hexInput.borderColor = valid and self._inputBorder or Color.error
 end
 
+--- Applies edited hex text to the color or marks the field invalid.
 --- @param text string Current hex text.
 function Panel:_onHexChanged(text)
     if self._syncing or text == self._lastHexText then
@@ -404,6 +414,7 @@ function Panel:_onHexChanged(text)
     self:_setColor(parsed, "hex", true)
 end
 
+--- Applies an edited R/G/B/A field value to the color.
 --- @param key "r"|"g"|"b"|"a" Channel key.
 --- @param text string Current field text.
 function Panel:_onChannelChanged(key, text)

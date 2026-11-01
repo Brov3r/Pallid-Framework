@@ -111,6 +111,7 @@ function Widgets.timeline(x, y, w, h, opts)
     return Timeline.new(x, y, w, h, opts)
 end
 
+--- Converts a string or table into the internal entry shape.
 --- @param entry table|string Source entry.
 --- @return table entry Normalised entry.
 local function normaliseEntry(entry)
@@ -160,6 +161,7 @@ function Timeline:scrollToEntry(index)
     return self
 end
 
+--- Paints one row: highlight, marker, title, time and text.
 --- @param el ISUIElement Host element.
 --- @param index integer One-based entry index.
 --- @param x number Row left.

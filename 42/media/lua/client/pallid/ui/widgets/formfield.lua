@@ -99,6 +99,7 @@ function Widgets.formField(x, y, w, h, opts)
     return FormField.new(x, y, w, h, opts)
 end
 
+--- Returns the cached height of one label text line.
 --- @return number lineH Height of one font line in pixels.
 function FormField:_lineHeight()
     if self._lineH == nil then
@@ -107,11 +108,13 @@ function FormField:_lineHeight()
     return self._lineH
 end
 
+--- Reports whether a label line is reserved.
 --- @return boolean hasLabel True when a label line is reserved.
 function FormField:_hasLabel()
     return self.label ~= nil and self.label ~= ""
 end
 
+--- Reports whether a hint, error or required marker needs a footer line.
 --- @return boolean hasFooter True when a hint or error line is reserved.
 function FormField:_hasFooter()
     return (self.hint ~= nil and self.hint ~= "") or self.error ~= nil or self.required
@@ -215,6 +218,7 @@ function FormField:getValue()
     return nil
 end
 
+--- Reports whether a value counts as empty.
 --- @param value any Value to test.
 --- @return boolean empty True for nil, an empty string or an empty table.
 local function isEmpty(value)

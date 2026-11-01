@@ -267,9 +267,13 @@ function Input:createBox()
     end
     self:_applyNativeColors()
 
+    --- Forwards native text changes to the widget.
+    --- @param _ ISUIElement Native text box that fired the change.
+    --- @param changed string New text of the box.
     box.onTextChangeFunction = function(_, changed)
         self:_onTextChange(changed)
     end
+    --- Calls the widget's submit handler when the native box reports Enter.
     box.onCommandEntered = function()
         if self.onSubmit ~= nil then
             self.onSubmit(self, self:getText(), self:getRawText())

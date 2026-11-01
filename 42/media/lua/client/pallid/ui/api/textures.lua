@@ -170,6 +170,7 @@ function Textures.get(path)
     return texture
 end
 
+--- Drops the path prefix up to and including the first slash.
 --- @param path string Source path or file name.
 --- @return string name Final path component.
 local function baseName(path)
@@ -180,6 +181,7 @@ local function baseName(path)
     return path
 end
 
+--- Loads the numbered atlas page image for a texture family.
 --- @param kind "icons"|"emoji" Atlas family.
 --- @param index integer One-based atlas index.
 --- @return Texture|nil texture Loaded atlas texture.
@@ -188,6 +190,7 @@ local function atlasTexture(kind, index)
     return Textures.get(ATLAS_DIR .. file .. string.format("%02d", index) .. ".png")
 end
 
+--- Builds a region descriptor from an atlas entry and its page texture.
 --- @param kind "icons"|"emoji" Atlas family.
 --- @param entry integer[] `{ atlasIndex, x, y, width, height }`.
 --- @return PallidTextureRegion|nil region Cached region descriptor.

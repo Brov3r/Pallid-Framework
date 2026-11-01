@@ -42,8 +42,8 @@ local InputArea = Widgets.class("InputArea", Widgets.InputBase)
 --- @field opts.border PallidColor|false|nil Field border; false disables it.
 --- @field opts.borderWidth number|nil Border thickness; defaults to 1.
 --- @field opts.transparent boolean|nil Draws no widget or native chrome.
---- @field opts.onChange fun(input: PallidInputBase, text: string, raw: string)|nil
---- @field opts.onSubmit fun(input: PallidInputBase, text: string, raw: string)|nil
+--- @field opts.onChange fun(input: PallidInputBase, text: string, raw: string)|nil Called after the text changes.
+--- @field opts.onSubmit fun(input: PallidInputBase, text: string, raw: string)|nil Called when the text is submitted.
 --- @return PallidInputArea input New multiline field.
 function InputArea.new(x, y, w, h, opts)
     opts = I.copyTable(opts)

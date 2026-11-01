@@ -17,6 +17,7 @@ local Image = Widgets.class("Image")
 
 local DEFAULT_OPTS = { mode = "fit" }
 
+--- Copies texture options and fills in the default fit mode.
 --- @param options PallidTextureOpts|nil Source options.
 --- @return PallidTextureOpts opts Copy with the default mode filled in.
 local function copyOptions(options)

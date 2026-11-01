@@ -10,11 +10,11 @@ local Textures = Pallid.UI.Textures
 local Draw = {}
 
 --- Background texture cache keyed by moodle size.
----@type table<number, Texture|false>
+---@type table<number, Texture|false> Background textures by size; false caches a failed load.
 local backgroundCache = {}
 
 --- Border texture cache keyed by moodle size.
----@type table<number, Texture|false>
+---@type table<number, Texture|false> Border textures by size; false caches a failed load.
 local borderCache = {}
 
 --- Loads and caches a native moodle background texture.

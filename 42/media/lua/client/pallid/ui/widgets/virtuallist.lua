@@ -100,6 +100,9 @@ function VirtualList.new(x, y, w, h, opts)
     self.rowSelected = Pallid.UI.Color.primarySoft
 
     self.barV = Widgets.scrollBar(true, self.w - self.barSize, 0, self.barSize, self.h, { margin = 1 })
+    --- Maps a scroll bar ratio to the vertical scroll offset.
+    --- @param _ PallidScrollBar|nil Unused scroll bar reference.
+    --- @param value number Scroll ratio, 0..1.
     self.barV.onChange = function(_, value)
         self.scrollY = value * (self.maxScroll or 0)
     end
@@ -121,6 +124,7 @@ function Widgets.virtualList(x, y, w, h, opts)
     return VirtualList.new(x, y, w, h, opts)
 end
 
+--- Returns the row height for an index, resolving the function form of `rowHeight`.
 --- @param index integer One-based row index.
 --- @return number height Row height in pixels, at least 1.
 function VirtualList:_rowHeightAt(index)
@@ -318,6 +322,7 @@ function VirtualList:setSelected(index, silent)
     return self
 end
 
+--- Reports whether the given row index is currently selected.
 --- @param index integer Row index.
 --- @return boolean selected True when the row is selected.
 function VirtualList:isSelected(index)

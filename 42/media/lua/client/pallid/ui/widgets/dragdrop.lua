@@ -51,6 +51,7 @@ DragDrop._hoverZone = nil
 -- Zones register on attach and unregister on detach; both paths are O(n) and
 -- happen only on structural changes.
 
+--- Adds a zone to the global registry, skipping duplicates.
 --- @param zone PallidDropZone Zone to register.
 function DragDrop._registerZone(zone)
     if zone == nil then
@@ -65,6 +66,7 @@ function DragDrop._registerZone(zone)
     zones[#zones + 1] = zone
 end
 
+--- Removes a zone from the global registry and clears its hover state.
 --- @param zone PallidDropZone Zone to remove.
 function DragDrop._unregisterZone(zone)
     local zones = DragDrop._zones
@@ -348,6 +350,7 @@ function DragDrop.reset()
     DragDrop._zones = {}
 end
 
+--- Ends the active drag session and notifies the hovered zone.
 --- @param dropped boolean True when the drag was dropped.
 function DragDrop:_finish(dropped) -- luacheck: ignore
     local active = DragDrop.active

@@ -37,7 +37,7 @@ end
 --- @field sections table Section entries: { title, content?, height?, open? }.
 --- @field headerHeight number Height of each clickable header.
 --- @field onlyOne boolean True keeps at most one section open.
---- @field onChange fun(accordion: PallidAccordion, index: integer, open: boolean)|nil
+--- @field onChange fun(accordion: PallidAccordion, index: integer, open: boolean)|nil Called after a section is opened or closed.
 --- @field hoverIndex integer Header under the cursor, 0 when none.
 --- @field style PallidTextStyle Reused section title style.
 --- @field arrowColor PallidColor Chevron icon tint.

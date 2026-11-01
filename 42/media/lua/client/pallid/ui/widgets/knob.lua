@@ -131,11 +131,13 @@ function Knob:setValue(value, silent)
     return ValueField.setValue(self, value, silent)
 end
 
+--- Returns the current value.
 --- @return number value Current value.
 function Knob:getValue()
     return self.value
 end
 
+--- Returns the value normalized to the 0..1 range.
 --- @return number t Normalized value, 0..1.
 function Knob:getT()
     return (self.value - self.min) / (self.max - self.min)
@@ -178,6 +180,8 @@ function Knob:onMove(px, py)
 end
 
 --- Ends the drag.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
 function Knob:onUp(px, py)
     self.dragging = false
 end
@@ -221,11 +225,13 @@ function Knob:onKeyPress(key)
     return false
 end
 
+--- Returns the formatted text of the current value.
 --- @return string text Formatted current value.
 function Knob:valueText()
     return ValueField.valueText(self)
 end
 
+--- Returns the unit-circle offset for an angle.
 --- @param angle number Angle in radians.
 --- @return number x Offset from the centre.
 --- @return number y Offset from the centre.

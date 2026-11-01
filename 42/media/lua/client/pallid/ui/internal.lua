@@ -27,7 +27,7 @@ end
 --- @field textures integer Texture/subtexture submissions.
 --- @field textLines integer Drawn text lines.
 --- @field lines integer Vector line segments.
---- @type PallidPerfCounters
+--- @type PallidPerfCounters Shared performance counter table.
 I.perf = {
     enabled   = false,
     sprites   = 0,

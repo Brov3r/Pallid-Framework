@@ -17,6 +17,7 @@ local Anim = Pallid.UI.Anim
 local Ease = {}
 Anim.ease = Ease
 
+--- Linear interpolation; the eased value equals the input time.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function linear(t)
@@ -24,6 +25,7 @@ local function linear(t)
 end
 Ease.linear = linear
 
+--- Quadratic ease-in: starts slowly and accelerates.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inQuad(t)
@@ -31,6 +33,7 @@ local function inQuad(t)
 end
 Ease.inQuad = inQuad
 
+--- Quadratic ease-out: starts quickly and decelerates.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outQuad(t)
@@ -38,6 +41,7 @@ local function outQuad(t)
 end
 Ease.outQuad = outQuad
 
+--- Quadratic ease-in-out: slow at both ends and fast in the middle.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutQuad(t)
@@ -49,6 +53,7 @@ local function inOutQuad(t)
 end
 Ease.inOutQuad = inOutQuad
 
+--- Cubic ease-in: starts slowly and accelerates.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inCubic(t)
@@ -56,6 +61,7 @@ local function inCubic(t)
 end
 Ease.inCubic = inCubic
 
+--- Cubic ease-out: starts quickly and decelerates.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outCubic(t)
@@ -64,6 +70,7 @@ local function outCubic(t)
 end
 Ease.outCubic = outCubic
 
+--- Cubic ease-in-out: slow at both ends and fast in the middle.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutCubic(t)
@@ -75,6 +82,7 @@ local function inOutCubic(t)
 end
 Ease.inOutCubic = inOutCubic
 
+--- Quartic ease-in with a steeper acceleration curve.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inQuart(t)
@@ -82,6 +90,7 @@ local function inQuart(t)
 end
 Ease.inQuart = inQuart
 
+--- Quartic ease-out with a steeper deceleration curve.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outQuart(t)
@@ -90,6 +99,7 @@ local function outQuart(t)
 end
 Ease.outQuart = outQuart
 
+--- Quartic ease-in-out with steeper ends and a fast middle.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutQuart(t)
@@ -101,6 +111,7 @@ local function inOutQuart(t)
 end
 Ease.inOutQuart = inOutQuart
 
+--- Sine ease-in: gentle acceleration along a cosine curve.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inSine(t)
@@ -108,6 +119,7 @@ local function inSine(t)
 end
 Ease.inSine = inSine
 
+--- Sine ease-out: gentle deceleration along a sine curve.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outSine(t)
@@ -115,6 +127,7 @@ local function outSine(t)
 end
 Ease.outSine = outSine
 
+--- Sine ease-in-out: equal acceleration and deceleration halves.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutSine(t)
@@ -122,6 +135,7 @@ local function inOutSine(t)
 end
 Ease.inOutSine = inOutSine
 
+--- Exponential ease-in: almost still until the final part of the curve.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inExpo(t)
@@ -132,6 +146,7 @@ local function inExpo(t)
 end
 Ease.inExpo = inExpo
 
+--- Exponential ease-out: fast start that settles towards the end.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outExpo(t)
@@ -142,6 +157,7 @@ local function outExpo(t)
 end
 Ease.outExpo = outExpo
 
+--- Exponential ease-in-out: exponential acceleration and deceleration.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutExpo(t)
@@ -158,6 +174,7 @@ local function inOutExpo(t)
 end
 Ease.inOutExpo = inOutExpo
 
+--- Circular ease-in following a quarter circle.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inCirc(t)
@@ -165,6 +182,7 @@ local function inCirc(t)
 end
 Ease.inCirc = inCirc
 
+--- Circular ease-out following a quarter circle.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outCirc(t)
@@ -173,6 +191,7 @@ local function outCirc(t)
 end
 Ease.outCirc = outCirc
 
+--- Circular ease-in-out following quarter circles on both halves.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutCirc(t)
@@ -187,6 +206,7 @@ Ease.inOutCirc = inOutCirc
 local BACK = 1.70158
 local BACK2 = BACK * 1.525
 
+--- Ease-in that pulls back slightly before moving forward.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inBack(t)
@@ -195,6 +215,7 @@ local function inBack(t)
 end
 Ease.inBack = inBack
 
+--- Ease-out that overshoots the target before settling.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outBack(t)
@@ -204,6 +225,7 @@ local function outBack(t)
 end
 Ease.outBack = outBack
 
+--- Ease-in-out with a backward pull at the start and an overshoot at the end.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inOutBack(t)
@@ -218,6 +240,7 @@ Ease.inOutBack = inOutBack
 
 local ELASTIC = PI * 2 / 3
 
+--- Elastic ease-in with a damped oscillation at the start.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inElastic(t)
@@ -231,6 +254,7 @@ local function inElastic(t)
 end
 Ease.inElastic = inElastic
 
+--- Elastic ease-out with a damped oscillation at the end.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outElastic(t)
@@ -247,6 +271,7 @@ Ease.outElastic = outElastic
 local BOUNCE_N = 7.5625
 local BOUNCE_D = 2.75
 
+--- Ease-out that bounces several times before settling.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function outBounce(t)
@@ -266,6 +291,7 @@ local function outBounce(t)
 end
 Ease.outBounce = outBounce
 
+--- Ease-in with bounce; the mirror image of outBounce.
 --- @param t number Normalized time, 0..1.
 --- @return number Eased value for the normalized time.
 local function inBounce(t)

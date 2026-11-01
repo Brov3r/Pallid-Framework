@@ -1,6 +1,7 @@
 Pallid = Pallid or {}
 Pallid.UI = Pallid.UI or {}
 
+--- Checks whether a name matches an existing vehicle script.
 --- @param name string|nil Vehicle script name, or nil.
 --- @return boolean valid True when the script exists, or when ScriptManager is unavailable.
 local function isVehicleScriptName(name)

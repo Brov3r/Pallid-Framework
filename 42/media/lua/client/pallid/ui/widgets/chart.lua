@@ -28,6 +28,7 @@ local AXIS_LEFT = 48
 local LEGEND_HEIGHT = 22
 local LEGEND_OVERFLOW_SPACE = 34
 
+--- Tells whether a value is a real, finite number.
 --- @param value any Value to check.
 --- @return boolean finite True for a real, finite number.
 local function isFinite(value)
@@ -397,6 +398,7 @@ function Chart:setBounds(x, y, w, h)
     return self
 end
 
+--- Logs the formatter fallback once per instance.
 function Chart:_warnFormat()
     if not self._formatWarned then
         self._formatWarned = true
@@ -433,6 +435,7 @@ function Chart:formatValue(value)
     return string.format("%.0f", value)
 end
 
+--- Returns the label text for a point index, defaulting to the index itself.
 --- @param index integer Point index.
 --- @return string Label for the point.
 function Chart:_xLabel(index)
@@ -443,6 +446,7 @@ function Chart:_xLabel(index)
     return tostring(index)
 end
 
+--- Returns the display name of a series.
 --- @param index integer Series index.
 --- @return string name Display name for a series.
 function Chart:_seriesName(index)
@@ -453,6 +457,7 @@ function Chart:_seriesName(index)
     return "Series " .. index
 end
 
+--- Returns the color of a series, falling back to the shared palette.
 --- @param index integer Series index.
 --- @return PallidColor color Series colour, falling back to the default palette.
 function Chart:_seriesColor(index)
@@ -463,6 +468,7 @@ function Chart:_seriesColor(index)
     return DEFAULT_COLORS[(index - 1) % #DEFAULT_COLORS + 1]
 end
 
+--- Computes plot geometry, value range, tick labels and legend items for the current bounds.
 function Chart:_layout()
     local legend = self.legendEnabled and (#self.series > 1 or self.legendExplicit == true)
     -- A legend on a very short chart would cover the plot.
@@ -684,6 +690,7 @@ function Chart:_buildDrawIndices()
     indices[limit] = count
 end
 
+--- Maps a point index to its X coordinate inside the plot area.
 --- @param index integer Point index.
 --- @return number x X coordinate.
 function Chart:_xAt(index)
@@ -697,6 +704,7 @@ function Chart:_xAt(index)
     return self._plotX + (index - 1) * (self._plotW / (count - 1))
 end
 
+--- Maps a data value to its Y coordinate inside the plot area.
 --- @param value number Value to map.
 --- @return number y Y coordinate.
 function Chart:_yAt(value)
@@ -917,6 +925,7 @@ function Chart:drawSelf(el)
         Pallid.UI.clipEnd(el)
     end
 end
+--- Draws the line series up to the current reveal progress.
 --- @param el ISUIElement Host element used for drawing.
 --- @param plotX number Plot area X coordinate.
 --- @param plotY number Plot area Y coordinate.
@@ -999,6 +1008,7 @@ function Chart:_drawHover(el, plotX, plotY, plotW, plotH)
     end
 end
 
+--- Draws the bar series up to the current reveal progress.
 --- @param el ISUIElement Host element used for drawing.
 --- @param plotX number Plot area X coordinate.
 --- @param plotY number Plot area Y coordinate.

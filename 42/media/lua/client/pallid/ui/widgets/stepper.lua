@@ -24,6 +24,7 @@ local DEFAULT_LABEL_MIN_SLOT = 44
 local LINE_ANIM_DURATION = 0.24
 local ICON_DIR = "media/assets/ui/pallid/icons/"
 
+--- Clamps a value into the given range, falling back to the minimum for non-numbers.
 --- @param value number|nil Value to clamp.
 --- @param min number Lower bound.
 --- @param max number Upper bound.

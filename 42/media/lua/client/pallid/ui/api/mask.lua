@@ -32,6 +32,7 @@ local RULES = {
     ["X"] = "upperAlnum",
 }
 
+--- Checks whether a single byte is an ASCII decimal digit.
 --- @param ch string Single byte.
 --- @return boolean digit True for 0..9.
 local function isDigit(ch)
@@ -39,6 +40,7 @@ local function isDigit(ch)
     return byte ~= nil and byte >= 48 and byte <= 57
 end
 
+--- Checks whether a single byte is an ASCII letter.
 --- @param ch string Single byte.
 --- @return boolean letter True for ASCII A..Z and a..z.
 local function isLetter(ch)
@@ -46,6 +48,7 @@ local function isLetter(ch)
     return byte ~= nil and ((byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122))
 end
 
+--- Checks whether a character satisfies a slot rule.
 --- @param rule string Slot rule.
 --- @param ch string Character to test.
 --- @return boolean accepted True when the character fits the slot.
@@ -59,6 +62,7 @@ local function accepts(rule, ch)
     return isDigit(ch) or isLetter(ch)
 end
 
+--- Converts a character to the case required by a slot rule.
 --- @param rule string Slot rule.
 --- @param ch string Accepted character.
 --- @return string value Character normalized for the slot.
@@ -117,6 +121,7 @@ function Mask.compile(pattern)
     return compiled
 end
 
+--- Resolves a mask argument to a compiled mask.
 --- @param mask PallidMask|string|nil Compiled mask or pattern.
 --- @return PallidMask|nil compiled Compiled mask, or nil.
 local function compiledOf(mask)

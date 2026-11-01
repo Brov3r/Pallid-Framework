@@ -52,12 +52,14 @@ local DEFAULT_ROTATE_INTERVAL = 2.5
 local ZOOM_MIN = -2
 local ZOOM_MAX = 4
 
+--- Checks for a string with at least one non-space character.
 --- @param value any Value to inspect.
 --- @return boolean nonBlank True for a string with at least one non-space char.
 local function isNonBlank(value)
     return type(value) == "string" and value:find("%S") ~= nil
 end
 
+--- Returns a clamped number, or the fallback when the value is not numeric.
 --- @param value any Value to convert.
 --- @param fallback number Value used when the input is not a number.
 --- @param minValue number|nil Lower clamp.
@@ -99,6 +101,7 @@ local function isDirection(value)
     return type(value) == "userdata"
 end
 
+--- Interactive 3D model preview for characters, outfits and survivors.
 --- @class PallidModel3D : PallidWidget
 --- @field model ISUI3DModel|nil Native model. Created lazily.
 --- @field character IsoGameCharacter|nil Live character source.

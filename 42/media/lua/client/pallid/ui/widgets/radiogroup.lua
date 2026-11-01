@@ -71,12 +71,14 @@ function RadioGroup:_clampSelection()
     end
 end
 
+--- Checks whether an option is the current selection.
 --- @param index integer Option index.
 --- @return boolean checked True when the option is selected.
 function RadioGroup:_isRowChecked(index)
     return self.selected == index
 end
 
+--- Selects an enabled option and reports whether the selection changed.
 --- @param index integer Option index.
 --- @return boolean changed True when the selection changed.
 function RadioGroup:_activateRow(index)

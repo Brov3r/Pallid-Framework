@@ -263,11 +263,13 @@ function PopupSelect:close()
     return self
 end
 
+--- Returns the initially highlighted row index.
 --- @return integer index Initial highlighted row.
 function PopupSelect:_initialHighlight()
     return 0
 end
 
+--- Checks that an index refers to an existing row.
 --- @param index integer Candidate row.
 --- @return boolean valid True for a real row index.
 function PopupSelect:_validIndex(index)
@@ -277,6 +279,7 @@ function PopupSelect:_validIndex(index)
     return index >= 1 and index <= #self.items
 end
 
+--- Reports whether a row shows a check mark; the base widget never does.
 --- @param index integer Row index.
 --- @return boolean checked True when the row is selected.
 function PopupSelect:_isRowChecked(index)
@@ -296,6 +299,7 @@ end
 function PopupSelect:_clampSelection()
 end
 
+--- Checks whether a row is missing or disabled.
 --- @param index integer Row index.
 --- @return boolean disabled True when the row cannot be activated.
 function PopupSelect:_rowDisabled(index)
@@ -303,6 +307,7 @@ function PopupSelect:_rowDisabled(index)
     return item == nil or item.disabled
 end
 
+--- Finds the row under a pointer position while the list is open.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
 --- @param x number Option-list X coordinate.
@@ -335,6 +340,7 @@ function PopupSelect:scrollbarRect()
     return x + w - 6, y + 3, h - 6
 end
 
+--- Computes scrollbar track and thumb geometry, or nil without scrolling.
 --- @return number|nil x Track X.
 --- @return number|nil y Track Y.
 --- @return number|nil h Track height.

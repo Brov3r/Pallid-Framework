@@ -87,6 +87,7 @@ local DEFAULT_TEXT_STYLE = {}
 -- draw many different strings should pass their own cache to prepareText.
 local DEFAULT_LAYOUT = {}
 
+--- Resolves a font argument, falling back to the default font for nil or unknown keys.
 --- @param font UIFont|string|nil Font or a key from Pallid.UI.Fonts.
 --- @return UIFont Resolved game font.
 local function resolveFont(font)
@@ -100,6 +101,7 @@ local function resolveFont(font)
 end
 I.resolveFont = resolveFont
 
+--- Splits a string into separate lines on newline characters.
 --- @param s string Input string.
 --- @return string[] One string per line.
 local function splitLines(s)
@@ -177,6 +179,7 @@ local function truncateWith(str, font, maxWidth, suffix)
     return head .. suffix
 end
 
+--- Wraps text to the given width and returns the resulting lines.
 --- @param str string Text to draw.
 --- @param font UIFont Game font to measure with.
 --- @param maxWidth number Maximum line width in pixels.
@@ -392,6 +395,7 @@ function Pallid.UI.truncateText(str, font, maxWidth)
     return truncateWith(str, font, maxWidth or 0, "...")
 end
 
+--- Draws one text line at the given anchor, using a zoomed draw when scaled.
 --- @param el ISUIElement Target element.
 --- @param str string Text to draw.
 --- @param x number Anchor X.
@@ -445,6 +449,7 @@ local function drawRun(el, str, x, y, font, r, g, b, a, scale, alignH, bold)
     end
 end
 
+--- Draws one text line with optional drop shadow and outline passes.
 --- @param el ISUIElement Target element.
 --- @param str string Text to draw.
 --- @param x number Anchor X.

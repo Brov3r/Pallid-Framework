@@ -27,11 +27,11 @@ local PallidProfession = {}
 PallidProfession.__index = PallidProfession
 
 --- Registered professions keyed by normalized registry id.
----@type table<string, PallidProfession>
+---@type table<string, PallidProfession> Registry keyed by normalized id.
 local registry = {}
 
 --- Registered professions in registration order.
----@type PallidProfession[]
+---@type PallidProfession[] Professions in registration order.
 local registrationOrder = {}
 
 --- Returns the lower-case registry id used by ResourceLocation.

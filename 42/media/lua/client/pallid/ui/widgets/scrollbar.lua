@@ -42,7 +42,7 @@ end
 --- @field margin number Gap between the track and the widget edge.
 --- @field dragging boolean True while the thumb is being dragged.
 --- @field grab number Grab offset inside the thumb, in pixels.
---- @field onChange fun(bar: PallidScrollBar, value: number)|nil
+--- @field onChange fun(bar: PallidScrollBar, value: number)|nil Called with the new scroll position.
 --- @field trackColor PallidColor Track fill.
 --- @field trackBorder PallidColor Track outline.
 --- @field thumbColor PallidColor Idle thumb fill.

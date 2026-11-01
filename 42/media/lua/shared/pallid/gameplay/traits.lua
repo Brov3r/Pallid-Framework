@@ -35,11 +35,11 @@ local PallidTrait = {}
 PallidTrait.__index = PallidTrait
 
 --- Registered traits keyed by normalized registry id.
----@type table<string, PallidTrait>
+---@type table<string, PallidTrait> Registry keyed by normalized id.
 local registry = {}
 
 --- Registered traits in registration order.
----@type PallidTrait[]
+---@type PallidTrait[] Traits in registration order.
 local registrationOrder = {}
 
 --- Returns the lower-case registry id used by ResourceLocation.

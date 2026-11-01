@@ -165,6 +165,7 @@ end
 function Widget:onDetach() -- luacheck: ignore
 end
 
+--- Calls `onAttach` on this widget and then on every descendant.
 function Widget:_notifyAttached()
     self:onAttach()
     local list = self.children
@@ -175,6 +176,7 @@ function Widget:_notifyAttached()
     end
 end
 
+--- Calls `onDetach` on this widget and then on every descendant.
 function Widget:_notifyDetached()
     self:onDetach()
     local list = self.children

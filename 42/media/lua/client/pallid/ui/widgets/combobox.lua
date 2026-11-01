@@ -63,6 +63,7 @@ local function optionLabel(option)
     return option == nil and "" or tostring(option)
 end
 
+--- Resolves the value a source option reports to the caller.
 --- @param option string|table Source option.
 --- @param label string Already normalised label.
 --- @return any value Value returned to the caller.
@@ -325,6 +326,7 @@ function ComboBox:close()
     return self
 end
 
+--- Tells whether the option popover is currently visible.
 --- @return boolean open True while the popover is visible.
 function ComboBox:isOpen()
     return self.open

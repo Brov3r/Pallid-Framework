@@ -41,6 +41,7 @@ local CORNERS = {
     ["bottom-left"]  = true,
 }
 
+--- Returns the requested corner when supported, otherwise the default corner.
 --- @param corner string|nil Requested corner.
 --- @return string corner Valid corner, defaults to "top-right".
 local function validCorner(corner)
@@ -72,6 +73,9 @@ local Toast = Widgets.class("Toast")
 --- Maximum number of simultaneously visible toasts.
 Toast.MAX_VISIBLE = 10
 
+--- Returns the per-root toast state, creating it on first use.
+--- @param root PallidWidget Root the toast stack belongs to.
+--- @return table state Per-root active and queue tables.
 local function ensureState(root)
     local state = root._pallidToastState
     if state == nil then
@@ -81,6 +85,7 @@ local function ensureState(root)
     return state
 end
 
+--- Recomputes the target position of every visible toast per corner stack.
 --- @param root PallidWidget Root whose box and state anchor the stacks.
 local function relayout(root)
     local state = root._pallidToastState
@@ -119,6 +124,7 @@ local function relayout(root)
     end
 end
 
+--- Moves queued toasts into the visible stack and starts their slide-in.
 --- @param root PallidWidget Root whose queue is drained into the visible stack.
 local function activateQueued(root)
     local state = ensureState(root)

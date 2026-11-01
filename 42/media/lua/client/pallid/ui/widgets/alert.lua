@@ -307,6 +307,7 @@ function Alert:setClosable(closable)
     return self
 end
 
+--- Sets the alert icon, hiding it, or restoring the severity icon.
 --- @param icon string|false|nil Registered icon, texture path, false to hide the
 --- block, or nil to fall back to the severity icon.
 --- @return PallidAlert self For chaining.
@@ -345,6 +346,7 @@ function Alert:_shiftX()
     return dx
 end
 
+--- Returns true when the cursor is over the close button.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return boolean inside True when the cursor is over the close button.

@@ -124,6 +124,7 @@ for i = 1, 31 do
     DAY_LABELS[i] = tostring(i)
 end
 
+--- Floors a value and clamps it to the given inclusive range.
 --- @param value number Value to process.
 --- @param lo number Inclusive lower bound.
 --- @param hi number Inclusive upper bound.
@@ -139,14 +140,16 @@ local function clampInt(value, lo, hi)
     return value
 end
 
+--- Reports whether the year is a leap year in the Gregorian calendar.
 --- @param year integer Year number.
 --- @return boolean leap True for a leap year.
 local function isLeapYear(year)
     return (year % 4 == 0 and year % 100 ~= 0) or year % 400 == 0
 end
 
+--- Returns the number of days in a month, accounting for leap years.
 --- @param year integer Year number.
---- @param month integer 1..12
+--- @param month integer Month number, 1..12.
 --- @return integer days Day count.
 local function daysInMonth(year, month)
     if month == 2 and isLeapYear(year) then
@@ -159,8 +162,8 @@ end
 --- Saturday, so game years far from the real calendar still work without
 --- going through os.time.
 --- @param year integer positive year.
---- @param month integer 1..12
---- @param day integer 1..31
+--- @param month integer Month number, 1..12.
+--- @param day integer Day of the month, 1..31.
 --- @return integer dow Day of week, 0..6.
 local function dayOfWeek(year, month, day)
     local y = year
@@ -199,6 +202,7 @@ local function readGameDate()
     return year, month, day
 end
 
+--- Reads the current real-world date from the operating system clock.
 --- @return integer|nil year Year value, or nil.
 --- @return integer|nil month Month value, or nil.
 --- @return integer|nil day Day value, or nil.
@@ -250,7 +254,7 @@ end
 --- @field todayDay integer|nil Today day, or nil.
 --- @field hoverNav integer 1..4 for an arrow, 0 for none.
 --- @field hoverCell integer 1-based grid cell, 0 for none.
---- @field onSelect fun(calendar: PallidDatePickerCalendar, year: integer, month: integer, day: integer)|nil
+--- @field onSelect fun(calendar: PallidDatePickerCalendar, year: integer, month: integer, day: integer)|nil Called when a day cell is picked.
 local Calendar = Widgets.class("DatePickerCalendar")
 
 --- Creates a new `Calendar` instance.
@@ -409,6 +413,7 @@ function Calendar:setToday(year, month, day)
     return self
 end
 
+--- Moves the view by a month delta and rolls over into the next or previous year.
 --- @param delta integer Wheel delta in steps.
 function Calendar:_stepMonth(delta)
     local month = self.month + delta
@@ -423,6 +428,7 @@ function Calendar:_stepMonth(delta)
     self:setView(year, month)
 end
 
+--- Reports whether the date matches the current selection.
 --- @param year integer Year number.
 --- @param month integer Month number, 1-based.
 --- @param day integer Day number, 1-based.
@@ -433,6 +439,7 @@ function Calendar:_isSelectedDate(year, month, day)
         and self.selectedDay == day
 end
 
+--- Reports whether the date matches the stored today date.
 --- @param year integer Year number.
 --- @param month integer Month number, 1-based.
 --- @param day integer Day number, 1-based.
@@ -443,6 +450,7 @@ function Calendar:_isTodayDate(year, month, day)
         and self.todayDay == day
 end
 
+--- Resolves a pointer position to a navigation arrow index.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
 --- @return integer nav 1..4 for an arrow, 0 otherwise.
@@ -467,6 +475,7 @@ function Calendar:_hitNav(px, py)
     return 0
 end
 
+--- Resolves a pointer position to a one-based day grid cell.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
 --- @return integer cell 1-based grid cell, 0 outside the grid.
@@ -568,6 +577,7 @@ function Calendar:onHoverEnd()
     Widgets.Widget.onHoverEnd(self)
 end
 
+--- Draws a navigation arrow icon centred on the given point.
 --- @param el ISUIElement Host element.
 --- @param texture Texture|nil Icon texture.
 --- @param cx number Icon centre X.
@@ -582,6 +592,7 @@ local function drawNavIcon(el, texture, cx, cy, color)
         NAV_ICON, NAV_ICON, color, ICON_OPTS)
 end
 
+--- Draws the four year and month navigation arrows with their hover pills.
 --- @param el ISUIElement Host element used for drawing.
 function Calendar:_drawNav(el)
     local color = self:shade(self.navColor)
@@ -686,7 +697,7 @@ end
 --- @field day integer 1-based.
 --- @field calendar PallidDatePickerCalendar|nil Created on first open.
 --- @field popover PallidPopover|nil Created on first open.
---- @field onChange fun(picker: PallidDatePicker, year: integer, month: integer, day: integer)|nil
+--- @field onChange fun(picker: PallidDatePicker, year: integer, month: integer, day: integer)|nil Called when the selected date changes.
 local DatePicker = Widgets.class("DatePicker", PickerField)
 
 --- Creates a new `DatePicker` instance.
@@ -698,7 +709,7 @@ local DatePicker = Widgets.class("DatePicker", PickerField)
 --- @field opts.value table|nil `{ year, month, day }`, 1-based; overrides the default.
 --- @field opts.gameTime boolean|nil Defaults to true; false forces the real date.
 --- @field opts.icon string|false|nil Icon name or texture path; false hides it.
---- @field opts.onChange fun(picker: PallidDatePicker, year: integer, month: integer, day: integer)|nil
+--- @field opts.onChange fun(picker: PallidDatePicker, year: integer, month: integer, day: integer)|nil Called when the selected date changes.
 --- @field opts.radius number|nil Defaults to 4.
 --- @return PallidDatePicker picker New date picker.
 function DatePicker.new(x, y, w, h, opts)
@@ -797,6 +808,11 @@ function DatePicker:_ensurePopover()
     local content = Widgets.widget(0, 0, POPOVER_WIDTH, POPOVER_HEIGHT)
 
     local calendar = Calendar.new(CAL_WIDTH, CAL_HEIGHT)
+    --- Forwards a picked calendar day to the date picker.
+    --- @param _ table|nil Unused calendar reference.
+    --- @param year integer Picked year.
+    --- @param month integer Picked month, 1-based.
+    --- @param day integer Picked day, 1-based.
     calendar.onSelect = function(_, year, month, day)
         self:_select(year, month, day)
     end
@@ -823,6 +839,7 @@ function DatePicker:_ensurePopover()
     })
 end
 
+--- Applies a selected date and notifies the change callback.
 --- @param year integer Year number.
 --- @param month integer Month number, 1-based.
 --- @param day integer Day number, 1-based.

@@ -40,11 +40,15 @@ function ReorderableList:_armDrag(row, index, px, py)
     return true
 end
 
+--- Builds the ghost label, icon and color for the dragged rows.
 --- @param rows table[] Rows being dragged.
 --- @return string label Drag ghost label.
 --- @return string|Texture|nil icon Icon value, or nil.
 --- @return PallidColor|nil color Color value, or nil.
 function ReorderableList:_dragSummary(rows)
+    --- Returns the label text of one row, resolving table values.
+    --- @param row table Row to describe.
+    --- @return string text Row label.
     local function textOf(row)
         local value = self.dragLabel ~= nil and self.dragLabel(row) or row[self.labelKey]
         if type(value) == "table" then
@@ -68,6 +72,7 @@ function ReorderableList:_dragSummary(rows)
     return label, icon, rows[1].color
 end
 
+--- Starts a drag of the selected rows, or of the armed row.
 --- @param px number Root-local pointer X.
 --- @param py number Root-local pointer Y.
 --- @return boolean started True when the drag started.
@@ -141,6 +146,7 @@ function ReorderableList:_startDrag(px, py)
     return true
 end
 
+--- Tracks the pointer and updates the insertion index during a drag.
 --- @param data table Drag data.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
@@ -152,6 +158,7 @@ function ReorderableList:_onDragMove(data, px, py)
     self:_updateInsertion(py)
 end
 
+--- Returns true when the point is over the visible row body.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
 --- @return boolean inside True when the pointer is over the painted body.
@@ -164,6 +171,7 @@ function ReorderableList:_isInsideBody(px, py)
         and self:isPointVisible(px, py)
 end
 
+--- Computes the insertion index from the pointer position.
 --- @param py number Root-local pointer Y.
 function ReorderableList:_updateInsertion(py)
     self._pointerInside = self._pointerX ~= nil and self:_isInsideBody(self._pointerX, py)
@@ -183,6 +191,7 @@ function ReorderableList:_updateInsertion(py)
     self._dragInsert = k
 end
 
+--- Scrolls the list while the pointer stays near an edge.
 --- @param dt number Seconds since the previous frame.
 --- @param py number Root-local pointer Y.
 function ReorderableList:_autoScroll(dt, py)
@@ -201,6 +210,7 @@ function ReorderableList:_autoScroll(dt, py)
     end
 end
 
+--- Applies an in-list reorder or hands the rows to another list.
 --- @param data table Drag data.
 --- @param px number Pointer X in local coordinates.
 --- @param py number Pointer Y in local coordinates.
@@ -279,6 +289,7 @@ function ReorderableList:_onDrop(data, px, py)
     return true
 end
 
+--- Clears the insertion state after a cancelled drag.
 --- @param data table Drag data.
 function ReorderableList:_onCancelDrag(data)
     if data ~= self._dragData then
@@ -288,6 +299,7 @@ function ReorderableList:_onCancelDrag(data)
     self._pointerInside = false
 end
 
+--- Removes transferred rows and clears all drag state.
 --- @param data table Drag data.
 --- @param dropped boolean True when the drag was dropped.
 function ReorderableList:_onDragEnd(data, dropped) -- luacheck: ignore

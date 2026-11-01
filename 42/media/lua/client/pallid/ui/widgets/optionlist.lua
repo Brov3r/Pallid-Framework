@@ -219,6 +219,7 @@ return function(OptionList)
         return self
     end
 
+    --- Tells whether a value is a one-based index inside the item list.
     --- @param index any Candidate option index.
     --- @return boolean valid True when index is an integer inside the list.
     function OptionList:_validIndex(index)
@@ -228,6 +229,7 @@ return function(OptionList)
         return index >= 1 and index <= #self.items
     end
 
+    --- Returns the row index under a cursor Y, or nil outside the rows.
     --- @param py number Cursor Y in root-local coordinates.
     --- @return integer|nil index Row under the cursor, or nil outside rows.
     function OptionList:_rowIndexAt(py)

@@ -199,6 +199,7 @@ function MultiCombo:setOptions(options, silent)
     return self
 end
 
+--- Rebuilds the filtered row index list from the current filter text.
 --- @param text string|nil Filter text.
 --- @param notify boolean True calls `onFilter`.
 function MultiCombo:_applyFilter(text, notify)
@@ -257,6 +258,7 @@ function MultiCombo:close()
     return self
 end
 
+--- Tells whether the popover is currently visible.
 --- @return boolean open True while the popover is visible.
 function MultiCombo:isOpen()
     return self.open
@@ -281,6 +283,7 @@ function MultiCombo:_toggleFiltered(index)
     end
 end
 
+--- Returns the selected values and their one-based indexes.
 --- @return any[] values Selected option values in option order.
 --- @return integer[] indexes Selected one-based indexes in option order.
 function MultiCombo:getSelected()
@@ -316,6 +319,7 @@ function MultiCombo:setSelectedIndexes(indexes, silent)
     return self
 end
 
+--- Counts the selected options.
 --- @return integer count Number of selected options.
 function MultiCombo:getSelectedCount()
     local count = 0
@@ -334,6 +338,7 @@ function MultiCombo:clearRect()
     return self:originX() + self.w - 36, self:originY() + 2, 16, self.h - 4
 end
 
+--- Tells whether a point lies on the clear button of a non-empty field.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return boolean inside True when the point is on the clear button.
@@ -403,12 +408,20 @@ function MultiCombo:_onFilterKey(key)
     return false
 end
 
+--- Scrolls the popover list so a filtered row is visible.
 --- @param index integer One-based filtered row index.
 function MultiCombo:_scrollToRow(index)
     PopupCombo.scrollToRow(self, index)
 end
 
---- Draws one row with a checkbox.
+--- Draws one row with a checkbox, optional icon and label.
+--- @param el ISUIElement Host element.
+--- @param index integer One-based filtered row index.
+--- @param x number Row left.
+--- @param y number Row top.
+--- @param w number Row width.
+--- @param h number Row height.
+--- @param state PallidVirtualRowState Reused row state.
 function MultiCombo:_drawRow(el, index, x, y, w, h, state)
     local rawIndex = self._filtered[index]
     if rawIndex == nil then

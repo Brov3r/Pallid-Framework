@@ -72,12 +72,14 @@ function ToggleGroup:_clampSelection()
     SelectionSet.clamp(self)
 end
 
+--- Returns true when an option is in the selected set.
 --- @param index integer Option index.
 --- @return boolean checked True when the option is checked.
 function ToggleGroup:_isRowChecked(index)
     return self.selected[index] == true
 end
 
+--- Toggles one option and reports that the state changed.
 --- @param index integer Option index.
 --- @return boolean changed True when the option state changed.
 function ToggleGroup:_activateRow(index)

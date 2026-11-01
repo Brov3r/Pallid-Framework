@@ -59,9 +59,9 @@ addInputMethods(Modal)
 --- @field opts.allowEscape boolean|nil Defaults to true.
 --- @field opts.closeOnBackdrop boolean|nil Defaults to false.
 --- @field opts.sound string|false|nil Button click sound.
---- @field opts.onOpen fun(dialog: PallidModalDialog)|nil
---- @field opts.onClose fun(dialog: PallidModalDialog)|nil
---- @field opts.onResult fun(button: table, dialog: PallidModalDialog)|nil
+--- @field opts.onOpen fun(dialog: PallidModalDialog)|nil Called after the dialog opens.
+--- @field opts.onClose fun(dialog: PallidModalDialog)|nil Called after the dialog closes.
+--- @field opts.onResult fun(button: table, dialog: PallidModalDialog)|nil Called with the pressed button descriptor.
 --- @return PallidModalDialog dialog The dialog instance.
 function Modal.new(opts)
     opts = opts or {}
@@ -290,6 +290,7 @@ function Modal:setSize(w, h)
     return self
 end
 
+--- Measures the title and message with the current width.
 --- @return number titleHeight Measured title height.
 --- @return number messageHeight Measured message height.
 function Modal:_measureTexts()
@@ -430,6 +431,7 @@ function Modal:close()
     return self
 end
 
+--- Returns true when the widget is this dialog or one of its descendants.
 --- @param widget PallidWidget Candidate descendant.
 --- @return boolean contained True when widget belongs to this dialog.
 function Modal:_contains(widget)

@@ -210,6 +210,9 @@ function TreeView.new(x, y, w, h, opts)
         math.max(1, self.h - 2),
         { margin = 1 }
     )
+    --- Scrolls the tree when the vertical scroll bar moves.
+    --- @param _ PallidScrollBar Scroll bar that changed; unused.
+    --- @param value number Scroll position in 0..1.
     self.barV.onChange = function(_, value)
         local offset = value * (self.maxScroll or 0)
         self.scrollY = offset
@@ -265,6 +268,10 @@ function TreeView:rebuild()
     local maxDepth = 0
     local prune = false
     local animate = false
+    --- Walks the node tree in order, appending each visible node to `rows`.
+    --- @param nodes PallidTreeNode[]|any Branch nodes to walk.
+    --- @param depth integer Current nesting depth, 0 for roots.
+    --- @param parentNode PallidTreeNode|nil Parent of these nodes.
     local function visit(nodes, depth, parentNode)
         if type(nodes) ~= "table" then
             return
@@ -398,6 +405,8 @@ end
 --- @return PallidTreeView self For chaining.
 function TreeView:expandAll(expanded)
     local seen = {}
+    --- Sets the expanded flag on every branch, skipping repeated nodes.
+    --- @param nodes PallidTreeNode[]|any Branch nodes to walk.
     local function visit(nodes)
         if type(nodes) ~= "table" then
             return
@@ -437,6 +446,8 @@ function TreeView:_toggleNode(node)
         node._loading = true
         node.expanded = true
         self:rebuild()
+        --- Applies asynchronously loaded children to the node and rebuilds.
+        --- @param result table|nil Children returned by `loadChildren`.
         local function done(result)
             if not node._loading then
                 return

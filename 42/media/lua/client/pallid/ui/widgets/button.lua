@@ -381,6 +381,7 @@ end
 
 local ICON_TINT = { r = 1, g = 1, b = 1, a = 1 }
 
+--- Clamps a number into the 0..1 range.
 --- @param value number Value to clamp into the 0..1 range.
 --- @return number clamped Clamped value.
 local function clamp01(value)

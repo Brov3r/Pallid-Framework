@@ -16,6 +16,7 @@ return function(Input)
     local utf16Length = I.utf16Length
     local utf16ToByte = I.utf16ToByte
 
+    --- Finds the byte offset where the UTF-8 character before pos starts.
     --- @param text string Source text.
     --- @param pos integer Byte offset.
     --- @return integer start Byte offset of the previous UTF-8 character.
@@ -28,12 +29,14 @@ return function(Input)
         return previous
     end
 
+    --- Reports whether a character is whitespace.
     --- @param ch string Single character.
     --- @return boolean space True for space, tab and line breaks.
     local function isSpace(ch)
         return ch == " " or ch == "\t" or ch == "\n" or ch == "\r"
     end
 
+    --- Moves the caret back over whitespace and then over the previous word.
     --- @param text string Source text.
     --- @param cursor integer UTF-16 caret offset.
     --- @return integer target UTF-16 offset at the previous word start.
@@ -56,6 +59,7 @@ return function(Input)
         return utf16Length(string.sub(text, 1, pos))
     end
 
+    --- Moves the caret past the current word and the whitespace that follows it.
     --- @param text string Source text.
     --- @param cursor integer UTF-16 caret offset.
     --- @return integer target UTF-16 offset at the next word start.
@@ -363,6 +367,7 @@ return function(Input)
         return self
     end
 
+    --- Reports whether a read-only input still has a non-empty selection.
     --- @return boolean selected True when a read-only range is non-empty.
     function Input:_hasReadOnlySelection()
         return self.readOnly and (self._selEnd or 0) > (self._selStart or 0)
@@ -571,6 +576,7 @@ return function(Input)
     --- extension and Ctrl+Shift+Backspace word deletion, plus Ctrl+C for a
     --- read-only selection.
     --- @param key integer Keyboard.KEY_* value.
+    --- @return boolean handled True when the option hook consumed the key.
     function Input:onKeyPress(key)
         local hook = self.onKeyPressOption
         if hook ~= nil and hook(self, key) == true then

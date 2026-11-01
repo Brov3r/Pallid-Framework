@@ -54,6 +54,8 @@ function ConfirmDialog.new(opts)
             },
         },
     })
+    --- Maps the pressed modal button to a cancel or confirm callback.
+    --- @param button table|nil Pressed button descriptor from the modal.
     self.dialog.onResult = function(button)
         if button ~= nil and button.negative then
             self:_cancel()
@@ -86,17 +88,20 @@ function ConfirmDialog:close()
     return self
 end
 
+--- Reports whether the wrapped dialog is currently visible.
 --- @return boolean open True while the dialog is visible.
 function ConfirmDialog:isOpen()
     return self.dialog:isOpen()
 end
 
+--- Fires the confirm callback when one is registered.
 function ConfirmDialog:_confirm()
     if self.onConfirm ~= nil then
         self.onConfirm(self)
     end
 end
 
+--- Fires the cancel callback when one is registered.
 function ConfirmDialog:_cancel()
     if self.onCancel ~= nil then
         self.onCancel(self)

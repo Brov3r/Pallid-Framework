@@ -14,6 +14,7 @@ local Color = Pallid.UI.Color
 local CHECK_A = Color.surfaceMuted
 local CHECK_B = Color.background
 
+--- Copies a color so the picker owns an independent table.
 --- @param color PallidColor Color to copy.
 --- @return PallidColor copy Independent copy of the color.
 local function copyColor(color)
@@ -23,7 +24,7 @@ end
 --- Small colour swatch that opens the picker panel in a popover.
 --- @class PallidColorPicker : PallidWidget
 --- @field color PallidColor Current color.
---- @field onChange fun(picker: PallidColorPicker, color: PallidColor)|nil
+--- @field onChange fun(picker: PallidColorPicker, color: PallidColor)|nil Called with the current color after a change.
 --- @field panel PallidColorPickerPanel|nil Lazily created picker panel.
 --- @field popover PallidPopover|nil Popover that hosts the panel.
 local ColorPicker = Widgets.class("ColorPicker")
@@ -92,6 +93,7 @@ function ColorPicker:open()
             background = Color.surfaceElevated,
             radius     = 6,
         })
+        --- Restores the panel to its idle state when the popover closes.
         self.panel.onClose = function()
             self.panel:reset()
         end

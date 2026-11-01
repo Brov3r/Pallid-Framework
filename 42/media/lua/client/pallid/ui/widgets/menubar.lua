@@ -242,6 +242,7 @@ function MenuBar:openAt(index)
     menu:measure()
 
     local root = self:getRoot()
+    --- Clears the open menu bookkeeping when the dropdown closes.
     menu.onClose = function()
         if self.activeIndex == index then
             self.activeIndex = 0

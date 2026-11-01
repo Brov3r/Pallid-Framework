@@ -106,6 +106,9 @@ function ImageGallery.new(x, y, w, h, opts)
     self.acceptsFocus = true
 
     self.barV = Widgets.scrollBar(true, self.w - self.barSize, 0, self.barSize, self.h, { margin = 1 })
+    --- Applies a scrollbar change to the gallery scroll offset.
+    --- @param _ any Unused scrollbar reference.
+    --- @param value number New scrollbar position, 0..1.
     self.barV.onChange = function(_, value)
         self.scrollY = value * (self.maxScroll or 0)
     end
@@ -127,6 +130,7 @@ function Widgets.imageGallery(x, y, w, h, opts)
     return ImageGallery.new(x, y, w, h, opts)
 end
 
+--- Resolves an item source into an atlas region or a plain texture.
 --- @param source string|Texture|nil Image source.
 --- @return PallidTextureRegion|nil region Atlas region.
 --- @return Texture|nil texture Individual texture.
@@ -224,6 +228,7 @@ function ImageGallery:refresh()
     return self
 end
 
+--- Returns the scrollbar gap, smaller for compact galleries.
 --- @return number gap Adaptive scrollbar gap.
 function ImageGallery:_barGap()
     if self.barGap ~= nil then
@@ -232,6 +237,7 @@ function ImageGallery:_barGap()
     return math.min(self.w, self.h) < 80 and 3 or 5
 end
 
+--- Returns the cell rectangle of an item index.
 --- @param index integer One-based item index.
 --- @return number x Cell left in root-local coordinates.
 --- @return number y Cell top in root-local coordinates.
@@ -242,6 +248,7 @@ function ImageGallery:cellRect(index)
         self:originY() + self.padding + row * (self.cellH + self.gap) - self._scrollPx
 end
 
+--- Returns the item index under a point, or 0 when none.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return integer index One-based item index, or 0.
@@ -270,6 +277,7 @@ function ImageGallery:itemAt(px, py)
     return self.items[index] ~= nil and index or 0
 end
 
+--- Returns whether an item counts as selected.
 --- @param index integer One-based item index.
 --- @return boolean selected True when selected.
 function ImageGallery:isSelected(index)
@@ -298,6 +306,7 @@ function ImageGallery:setSelected(index, silent)
     return self
 end
 
+--- Returns the selected item index, or nil.
 --- @return integer|nil index Selected item index.
 function ImageGallery:getSelected()
     return self.selected

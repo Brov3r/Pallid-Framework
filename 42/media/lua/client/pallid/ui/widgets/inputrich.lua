@@ -294,6 +294,7 @@ function InputRich:_rebuildLines(text)
     local current = { segments = {}, text = "", start0 = 0, width = 0, x = 0 }
     lines[1] = current
 
+    --- Appends the current line to the list when it is not already there.
     local function ensureLine()
         if lines[#lines] ~= current then
             lines[#lines + 1] = current

@@ -44,9 +44,9 @@ local DEFAULT_LEAD = 22
 --- @field handleName string|nil Registered grip icon name.
 --- @field insertionColor PallidColor Insertion line colour.
 --- @field dragRowFill PallidColor Overlay over the rows currently being dragged.
---- @field onReorder fun(list: PallidReorderableList, rows: table[], from: integer, to: integer)|nil
---- @field onTransferIn fun(list: PallidReorderableList, rows: table[], index: integer, source: PallidReorderableList|nil)|nil
---- @field onTransferOut fun(list: PallidReorderableList, rows: table[], target: PallidReorderableList|nil)|nil
+--- @field onReorder fun(list: PallidReorderableList, rows: table[], from: integer, to: integer)|nil Called after rows move; `from` 0 means an external insert.
+--- @field onTransferIn fun(list: PallidReorderableList, rows: table[], index: integer, source: PallidReorderableList|nil)|nil Called when rows arrive from another list.
+--- @field onTransferOut fun(list: PallidReorderableList, rows: table[], target: PallidReorderableList|nil)|nil Called when this list's rows are dropped elsewhere.
 local ReorderableList = Widgets.class("ReorderableList", Widgets.Table)
 
 --- Creates a new `ReorderableList` instance.
@@ -73,9 +73,9 @@ local ReorderableList = Widgets.class("ReorderableList", Widgets.Table)
 --- @field opts.autoScrollEdge number|nil Edge zone in pixels; defaults to 24.
 --- @field opts.autoScrollSpeed number|nil Pixels per second; defaults to 420.
 --- @field opts.insertionColor PallidColor|nil Defaults to Color.accent.
---- @field opts.onReorder fun(list: PallidReorderableList, rows: table[], from: integer, to: integer)|nil
---- @field opts.onTransferIn fun(list: PallidReorderableList, rows: table[], index: integer, source: PallidReorderableList|nil)|nil
---- @field opts.onTransferOut fun(list: PallidReorderableList, rows: table[], target: PallidReorderableList|nil)|nil
+--- @field opts.onReorder fun(list: PallidReorderableList, rows: table[], from: integer, to: integer)|nil Called after rows move; `from` 0 means an external insert.
+--- @field opts.onTransferIn fun(list: PallidReorderableList, rows: table[], index: integer, source: PallidReorderableList|nil)|nil Called when rows arrive from another list.
+--- @field opts.onTransferOut fun(list: PallidReorderableList, rows: table[], target: PallidReorderableList|nil)|nil Called when this list's rows are dropped elsewhere.
 --- @return PallidReorderableList New reorderable list.
 function ReorderableList.new(x, y, w, h, columns, rows, opts)
     opts = opts or {}
@@ -334,6 +334,7 @@ function ReorderableList:_replaceRows(out)
     end
 end
 
+--- Collects the selected, enabled rows in view order.
 --- @return table[] rows Selected rows in view order.
 function ReorderableList:_selectedRows()
     local result = {}
@@ -406,6 +407,7 @@ function ReorderableList:drawSelf(el)
     self:_drawDragOverlay(el)
 end
 
+--- Draws the dim fill over dragged rows and the insertion line.
 --- @param el ISUIElement Host element.
 function ReorderableList:_drawDragOverlay(el)
     local hasDim = self._dragging and self._dragRows ~= nil

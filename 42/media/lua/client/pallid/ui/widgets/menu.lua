@@ -615,6 +615,7 @@ function Menu:_ensureHoverVisible(index)
     self.scrollY = math.max(0, math.min(self._maxScroll or 0, self.scrollY))
 end
 
+--- Returns true for a clickable row that is neither a separator nor disabled.
 --- @param index integer Candidate item index.
 --- @return boolean activatable True for a real, enabled, non-separator row.
 function Menu:_isActivatable(index)

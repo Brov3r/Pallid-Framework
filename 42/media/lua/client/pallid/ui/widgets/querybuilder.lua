@@ -27,6 +27,7 @@ local REMOVE_W = 26
 --- @field autoHeight boolean True grows the widget to fit its rows.
 local QueryBuilder = Widgets.class("QueryBuilder")
 
+--- Resolves a localised label for an operator key.
 --- @param key string Operator key.
 --- @param fallback string English label.
 --- @return string label Localised operator label.
@@ -83,6 +84,7 @@ function Widgets.queryBuilder(x, y, w, h, opts)
     return QueryBuilder.new(x, y, w, h, opts)
 end
 
+--- Returns the field descriptor with the given key.
 --- @param key string|nil Field key.
 --- @return table|nil field Field descriptor.
 function QueryBuilder:_field(key)
@@ -94,6 +96,7 @@ function QueryBuilder:_field(key)
     return nil
 end
 
+--- Returns the default operator key for a field type.
 --- @param key string|nil Field key.
 --- @return string operator Default operator for the field type.
 function QueryBuilder:_defaultOperator(key)
@@ -107,6 +110,7 @@ function QueryBuilder:_defaultOperator(key)
     return "contains"
 end
 
+--- Builds the operator list for a field from its descriptor or type defaults.
 --- @param field table|nil Field descriptor.
 --- @return table[] operators Operator descriptors `{ key, label }`.
 function QueryBuilder:_operatorsFor(field)
@@ -355,6 +359,7 @@ function QueryBuilder:_rebuild()
     end
 end
 
+--- Collects the labels of every field for a field selector.
 --- @return string[] options Field labels.
 function QueryBuilder:_fieldOptions()
     local options = {}

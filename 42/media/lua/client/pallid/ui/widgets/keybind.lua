@@ -24,6 +24,9 @@ local ICON_OPTS = { mode = "fit" }
 -- layout would then bind/show "Z" where the physical key is "Y". Game controls
 -- are physical, so the binding UI uses this fixed US-English table instead.
 local KEY_NAMES = {}
+--- Registers the fixed display name for a key code.
+--- @param key integer Key code to name.
+--- @param text string Display name shown in the UI.
 local function name(key, text)
     KEY_NAMES[key] = text
 end
@@ -134,6 +137,7 @@ end
 
 Pallid.UI.keyName = keyName
 
+--- Returns the localized display name of a mouse button.
 --- @param button string|nil "left", "right" or "middle".
 --- @return string text Localized mouse button name.
 local function mouseName(button)
@@ -156,6 +160,7 @@ local MODIFIER_KEYS = {
 --- binding of its own.
 local MODIFIER_BIND_DELAY = 0.6
 
+--- Returns true while the given key is held down.
 --- @param key integer Key code, or nil to clear.
 --- @return boolean True when the key is currently held.
 local function down(key)
@@ -174,6 +179,7 @@ local function modifiers()
         down(Keyboard.KEY_LWIN) or down(Keyboard.KEY_RWIN)
 end
 
+--- Clears every pending modifier flag.
 --- @param pending table Mutable pending-modifier table.
 local function resetPending(pending)
     pending.ctrl = false
@@ -198,8 +204,8 @@ local mixInto = Pallid.UI.Color.mixInto
 --- @field win boolean Current Windows-key state.
 --- @field keyName string|nil Human readable key name.
 --- @field listening boolean True while the widget captures keys.
---- @field onChange fun(keybind: PallidKeybind, key: integer|nil, text: string)|nil
---- @field onComboChange fun(keybind: PallidKeybind, combo: table)|nil
+--- @field onChange fun(keybind: PallidKeybind, key: integer|nil, text: string)|nil Called after the binding changes.
+--- @field onComboChange fun(keybind: PallidKeybind, combo: table)|nil Called with the new combo after the binding changes.
 --- @field onValidate fun(combo: table): boolean|nil Return false to reject a capture.
 local Keybind = Widgets.class("Keybind")
 
@@ -216,8 +222,8 @@ local Keybind = Widgets.class("Keybind")
 --- @field opts.alt boolean|nil Initial Alt state.
 --- @field opts.win boolean|nil Initial Windows-key state.
 --- @field opts.icon string|false|nil Icon name or texture path; false hides it.
---- @field opts.onChange fun(keybind: PallidKeybind, key: integer|nil, text: string)|nil
---- @field opts.onComboChange fun(keybind: PallidKeybind, combo: table)|nil
+--- @field opts.onChange fun(keybind: PallidKeybind, key: integer|nil, text: string)|nil Called after the binding changes.
+--- @field opts.onComboChange fun(keybind: PallidKeybind, combo: table)|nil Called with the new combo after the binding changes.
 --- @field opts.onValidate fun(combo: table): boolean|nil Return false to reject a capture.
 --- @return PallidKeybind keybind New keybind field.
 function Keybind.new(x, y, w, h, opts)
@@ -398,6 +404,7 @@ function Keybind:clear()
     return self:_apply(nil, nil, false, false, false, false, false)
 end
 
+--- Applies a binding, refreshes the label and fires the change callbacks.
 --- @param key integer|nil Key code, or nil to clear.
 --- @param mouse string|nil Mouse button, or nil to clear.
 --- @param ctrl boolean|nil Ctrl modifier state.
@@ -459,12 +466,14 @@ function Keybind:getKeyName()
     return self.keyName
 end
 
+--- Returns the clear icon position inside the field.
 --- @return number x Clear-icon X inside the field.
 --- @return number y Clear-icon Y inside the field.
 function Keybind:_clearRect()
     return self.w - PAD - CLEAR_SIZE, math.floor((self.h - CLEAR_SIZE) * 0.5)
 end
 
+--- Tells whether a root-local point is over the clear icon.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return boolean hit True when the cursor is over the clear icon.
@@ -484,12 +493,14 @@ function Keybind:_refreshClear()
     self._clearVisible = self.listening or self:isBound()
 end
 
+--- Tells whether the validator accepts a candidate combo.
 --- @param combo table Candidate combo.
 --- @return boolean accepted True when `onValidate` allows the combo.
 function Keybind:_validate(combo)
     return self.onValidate == nil or self.onValidate(combo) ~= false
 end
 
+--- Commits a captured mouse binding and stops recording.
 --- @param mouse string "left" or "right".
 function Keybind:_finishMouse(mouse)
     local ctrl, shift, alt, win = modifiers()
@@ -513,6 +524,7 @@ function Keybind:_finishMouse(mouse)
     self:blur()
 end
 
+--- Commits a captured keyboard binding and stops recording.
 --- @param key integer Keyboard key code.
 function Keybind:_finishKey(key)
     local ctrl, shift, alt, win = modifiers()

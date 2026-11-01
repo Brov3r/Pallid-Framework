@@ -31,6 +31,7 @@ function ReorderableList:_externalEnter(data, px, py)
     data.previewList = self
 end
 
+--- Updates the insertion preview while a foreign drag is over this list.
 --- @param data table|nil Drag data from the source list.
 --- @param px number Root-local pointer X.
 --- @param py number Root-local pointer Y.
@@ -42,6 +43,7 @@ function ReorderableList:_externalMove(data, px, py)
     self:_updateInsertion(py)
 end
 
+--- Clears the insertion preview when a foreign drag leaves this list.
 --- @param data table|nil Drag data from the source list.
 function ReorderableList:_externalLeave(data)
     if data ~= nil and data.previewList == self then

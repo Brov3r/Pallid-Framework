@@ -479,6 +479,7 @@ function RadialMenu:isInside(px, py)
     return self.visible and self:_insideDisc(px, py)
 end
 
+--- Tests whether a point lies inside the outer hit radius of the disc.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return boolean inside True when the point lies inside the outer radius.

@@ -140,8 +140,10 @@ function SplitButton:setEnabled(enabled)
     return self
 end
 
+--- Opens the menu when the arrow segment is pressed.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
+--- @param button string|nil "left" or "right".
 --- @return boolean handled True when the arrow segment was pressed.
 function SplitButton:onDown(px, py, button)
     if not self.enabled or button == "right" then

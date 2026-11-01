@@ -35,32 +35,32 @@ local logger = Pallid.getLogger("MoodlesUI")
 
 --- Custom renderer contract.
 ---@class PallidMoodleRenderer
----@field render fun(self: PallidMoodleRenderer, element: MoodlesUI, player: IsoPlayer, entries: PallidMoodleEntry[], layout: PallidMoodleLayout)
+---@field render fun(self: PallidMoodleRenderer, element: MoodlesUI, player: IsoPlayer, entries: PallidMoodleEntry[], layout: PallidMoodleLayout) Draws the custom moodle list; the return value is ignored.
 
 --- Whether the built-in renderer draws custom moodles.
 local rendererEnabled = true
 
 --- Optional custom renderer replacing the built-in drawing function.
----@type PallidMoodleRenderer|function|nil
+---@type PallidMoodleRenderer|function|nil Renderer table, bare function, or nil for the built-in drawing.
 local customRenderer = nil
 
 --- Cached native MoodleType objects.
----@type table[]|nil
+---@type table[]|nil Native types reused when building entries.
 local nativeTypes = nil
 
 --- Set when a third-party MoodleType cannot be read from the native map.
 local nativeCountFailed = false
 
 --- Per-player hook state.
----@type table<number, table>
+---@type table<number, table> Hook tables keyed by zero-based player number.
 local hooks = {}
 
 --- Per-player layout cache.
----@type table<number, PallidMoodleLayout>
+---@type table<number, PallidMoodleLayout> Cached layouts keyed by zero-based player number.
 local layouts = {}
 
 --- Reused entries for the public forEachVisible helper.
----@type table[]
+---@type table[] Reused entry tables indexed by position.
 local scratchEntries = {}
 
 --- Returns the zero-based player index of a character.
@@ -407,9 +407,13 @@ local function installHook(playerNum, player)
         -- onResize and similar).
         __index = previous,
     })
+    --- Draws custom moodles for this element; the installed `render` callback.
+    ---@param self table Installed MoodlesUI table.
     installed.render = function(self)
         renderHook(self)
     end
+    --- Updates the cached layout for this element; the installed `update` callback.
+    ---@param self table Installed MoodlesUI table.
     installed.update = function(self)
         updateHook(self)
     end

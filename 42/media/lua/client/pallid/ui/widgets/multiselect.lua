@@ -25,7 +25,7 @@ local ICON_OPTS = { mode = "fit" }
 --- bounds change.
 --- @class PallidMultiSelect : PallidPopupSelect
 --- @field selected table<integer, boolean> Checked options keyed by index.
---- @field onChange fun(multi: PallidMultiSelect, index: integer, checked: boolean, item: PallidOption)|nil
+--- @field onChange fun(multi: PallidMultiSelect, index: integer, checked: boolean, item: PallidOption)|nil Called after an option is toggled.
 local MultiSelect = Widgets.class("MultiSelect", PopupSelect)
 
 --- Creates a new `MultiSelect` instance.
@@ -170,11 +170,13 @@ function MultiSelect:clear(silent)
     return self:setAll(false, silent)
 end
 
+--- Toggles the checked state of an option row.
 --- @param index integer Option index.
 function MultiSelect:_activateRow(index)
     self:setSelected(index, not self:isSelected(index))
 end
 
+--- Tells whether an option row is checked.
 --- @param index integer Option index.
 --- @return boolean checked True for a checked option.
 function MultiSelect:_isRowChecked(index)
@@ -246,6 +248,7 @@ function MultiSelect:_refreshFieldLayout()
     end
 end
 
+--- Draws the check marker of an option row in the popup list.
 --- @param el ISUIElement Host element.
 --- @param item PallidOption Row item.
 --- @param index integer Row index.
@@ -278,6 +281,7 @@ function MultiSelect:_drawListMarker(el, item, index, x, y)
     end
 end
 
+--- Draws the selected chips, or the placeholder when nothing is selected.
 --- @param el ISUIElement Host element.
 --- @param x number Field left.
 --- @param y number Field top.

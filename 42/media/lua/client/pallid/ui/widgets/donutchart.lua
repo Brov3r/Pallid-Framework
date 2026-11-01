@@ -141,6 +141,7 @@ function DonutChart:setFormat(format)
     return self
 end
 
+--- Sums the positive values of every segment.
 --- @return number total Sum of all segment values.
 function DonutChart:getTotal()
     local total = 0
@@ -153,6 +154,7 @@ function DonutChart:getTotal()
     return total
 end
 
+--- Formats a value with the configured format string or function.
 --- @param value number Value to format.
 --- @return string text Formatted value.
 function DonutChart:formatValue(value)

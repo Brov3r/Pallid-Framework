@@ -12,6 +12,7 @@ local SAFE_INSET = 1
 -- Marker used inside layout index lists. Real crumb indexes start at 1.
 local ELLIPSIS = 0
 
+--- Measures the rendered pixel width of a text string in a font.
 --- @param font UIFont Game font used for measuring.
 --- @param text string Text to measure.
 --- @return number width Width in pixels.

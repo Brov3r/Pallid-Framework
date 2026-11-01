@@ -23,15 +23,15 @@ local ICON_OPTS    = { mode = "fit" }
 --- `onMove`/`onUp` in root-local coordinates and keyboard focus for Esc.
 --- @class PallidDragHandle : PallidWidget
 --- @field size number Smaller side of the handle box; the icon is fitted inside it.
---- @field payload table|fun(handle: PallidDragHandle):table|nil
+--- @field payload table|fun(handle: PallidDragHandle):table|nil Payload table or a factory called on drag start.
 --- @field color PallidColor Outline color.
 --- @field hoverColor PallidColor Hover outline color.
 --- @field iconTexture Texture|nil Resolved grip texture.
 --- @field iconName string|nil Registered grip icon name.
 --- @field threshold number Pixels the pointer must move before a drag starts.
 --- @field dragging boolean True once the session started.
---- @field onDragStart fun(payload: table, source: PallidDragHandle)|nil
---- @field onDragEnd fun(dropped: boolean, payload: table)|nil
+--- @field onDragStart fun(payload: table, source: PallidDragHandle)|nil Called after the drag session starts.
+--- @field onDragEnd fun(dropped: boolean, payload: table)|nil Called when the drag session ends.
 --- @field onClick fun(handle: PallidDragHandle)|nil Called on a press without a drag.
 local DragHandle = Widgets.class("DragHandle")
 
@@ -51,9 +51,9 @@ local DragHandle = Widgets.class("DragHandle")
 --- @field opts.hoverBorder PallidColor|nil Border drawn around a plain surface while hovered.
 --- @field opts.threshold number|nil Drag threshold in pixels; defaults to 4.
 --- @field opts.acceptsFocus boolean|nil Defaults to true; required for Esc.
---- @field opts.onDragStart fun(payload: table, source: PallidDragHandle)|nil
---- @field opts.onDragEnd fun(dropped: boolean, payload: table)|nil
---- @field opts.onClick fun(handle: PallidDragHandle)|nil
+--- @field opts.onDragStart fun(payload: table, source: PallidDragHandle)|nil Called after the drag session starts.
+--- @field opts.onDragEnd fun(dropped: boolean, payload: table)|nil Called when the drag session ends.
+--- @field opts.onClick fun(handle: PallidDragHandle)|nil Called on a press that never becomes a drag.
 --- @return PallidDragHandle New drag handle.
 function DragHandle.new(x, y, size, opts)
     opts = opts or {}
@@ -109,6 +109,7 @@ function DragHandle:setIcon(icon)
     return self
 end
 
+--- Resolves the payload, calling the factory form and rejecting non-tables.
 --- @return table|nil payload Drag payload, or nil.
 function DragHandle:_resolvePayload()
     local payload = self.payload
@@ -139,12 +140,14 @@ function DragHandle:setBounds(x, y, w, h)
     return self
 end
 
+--- Clears the armed and dragging state without starting a session.
 function DragHandle:_disarm()
     self._armed = false
     self._started = false
     self.dragging = false
 end
 
+--- Starts a drag session and fires the start callback when the threshold was reached.
 --- @param px number Root-local pointer X.
 --- @param py number Root-local pointer Y.
 --- @return boolean started True when the session started.

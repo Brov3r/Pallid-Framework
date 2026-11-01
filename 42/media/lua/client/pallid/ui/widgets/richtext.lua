@@ -16,6 +16,7 @@ local I = Pallid.UI._internal
 local RECT_SHAPE = Pallid.UI.Shape.rect()
 local ICON_OPTS = { mode = "fit" }
 
+--- Returns the byte length of a UTF-8 sequence from its first byte.
 --- @param byte integer First byte of a UTF-8 sequence.
 --- @return integer length Sequence length in bytes.
 local function utf8Length(byte)
@@ -91,6 +92,12 @@ Rich.Palette = {
 }
 
 -- Mutable style table used while parsing; runs copy the flags.
+--- Builds the shared style table used while parsing.
+--- @param bold boolean|nil Bold flag.
+--- @param underline boolean|nil Underline flag.
+--- @param strike boolean|nil Strike-through flag.
+--- @param color PallidColor|nil Text colour.
+--- @return table style Style table read by the parser.
 local function packStyle(bold, underline, strike, color)
     return {
         bold = bold or nil,
@@ -100,6 +107,7 @@ local function packStyle(bold, underline, strike, color)
     }
 end
 
+--- Appends text to the run list, merging it into a matching previous run.
 --- @param runs table[] Styled text runs.
 --- @param text string Text to process.
 --- @param color PallidColor|nil Color to use.
@@ -147,6 +155,7 @@ function Rich.parse(str, opts)
     local style = packStyle(bold, underline, strike, color)
     local buffer = {}
 
+    --- Emits the buffered characters as a run and clears the buffer.
     local function flush()
         if #buffer > 0 then
             pushRun(runs, table.concat(buffer), color, style)
@@ -154,6 +163,7 @@ function Rich.parse(str, opts)
         end
     end
 
+    --- Copies the current flags into the shared style table.
     local function updateStyle()
         style.bold = bold or nil
         style.underline = underline or nil
@@ -274,12 +284,14 @@ function Rich.layout(runs, font, maxWidth, lineSpacing, iconSize)
     local x, y = 0, 0
     local lineW, maxW = 0, 0
 
+    --- Advances the cursor to the start of the next line.
     local function newline()
         y = y + lineH + spacing
         x = 0
         lineW = 0
     end
 
+    --- Records the widest line so far and starts a new line.
     local function breakLine()
         if lineW > maxW then
             maxW = lineW
@@ -287,6 +299,10 @@ function Rich.layout(runs, font, maxWidth, lineSpacing, iconSize)
         newline()
     end
 
+    --- Appends a positioned text segment and advances the cursor.
+    --- @param text string Text to draw.
+    --- @param width number Segment width in pixels.
+    --- @param run table Run providing the style.
     local function pushSegment(text, width, run)
         if text == "" then
             return
@@ -400,6 +416,7 @@ local languageRules = {}
 local languageCompiled = {}
 local lastHighlight = {}
 
+--- Checks that a string compiles as an anchored Lua pattern.
 --- @param pattern string|nil Lua pattern.
 --- @return boolean valid True when the pattern compiles.
 local function validPattern(pattern)
@@ -456,6 +473,9 @@ function Rich.addRule(name, rule)
     return true
 end
 
+--- Returns the palette colour used for an identifier.
+--- @param word string Identifier text.
+--- @return PallidColor color Palette colour for the identifier.
 local function identifierColor(word)
     if CONSTANTS[word] then
         return Rich.Palette.constant
@@ -469,10 +489,14 @@ local function identifierColor(word)
     return Rich.Palette.text
 end
 
+--- Returns true when an identifier should be drawn in bold.
+--- @param word string Identifier text.
+--- @return boolean bold True for keywords and reserved words.
 local function identifierBold(word)
     return KEYWORDS[word] == true
 end
 
+--- Returns the palette colour used for a matched call token.
 --- @param word string Matched call token, including the trailing parenthesis.
 --- @return PallidColor color Keyword/builtin/function tint for the call name.
 local function callColor(word)
@@ -487,6 +511,7 @@ local function callColor(word)
     return Rich.Palette.func
 end
 
+--- Returns true when the matched call token is a keyword.
 --- @param word string Matched call token.
 --- @return boolean bold True for keyword calls.
 local function callBold(word)
@@ -538,6 +563,9 @@ function Rich.getLanguage(name)
     return copy
 end
 
+--- Builds a tokenizer function for a language, falling back to plain text.
+--- @param name string Language name.
+--- @return fun(text: string): table[] tokenize Tokenizer returning styled runs.
 local function compile(name)
     local rules = languageRules[name] or PLAIN_RULES
     local patterns = {}
@@ -623,7 +651,7 @@ end
 --- Display-only rich text. Use `inputRich` for editing.
 --- @class PallidRichText : PallidWidget
 --- @field text string Current text.
---- @field onLink fun(rich: PallidRichText, url: string)|nil
+--- @field onLink fun(rich: PallidRichText, url: string)|nil Called when a link is activated.
 local RichText = Widgets.class("RichText")
 
 --- Creates a new `RichText` instance.
@@ -639,7 +667,7 @@ local RichText = Widgets.class("RichText")
 --- @field opts.linkHoverColor PallidColor|nil Hovered link color.
 --- @field opts.lineSpacing number|nil Extra spacing between lines in pixels.
 --- @field opts.iconSize number|nil Inline icon size in pixels.
---- @field opts.onLink fun(rich: PallidRichText, url: string)|nil
+--- @field opts.onLink fun(rich: PallidRichText, url: string)|nil Called when a link is activated.
 --- @return PallidRichText New rich text widget.
 function RichText.new(text, x, y, w, h, opts)
     opts = opts or {}
@@ -706,6 +734,7 @@ function RichText:measuredSize()
     return self._contentWidth or self.w, self._contentHeight
 end
 
+--- Rebuilds the segment layout when the text or geometry changed.
 function RichText:_ensureLayout()
     if self._cacheText == self.text
         and self._cacheW == self.w

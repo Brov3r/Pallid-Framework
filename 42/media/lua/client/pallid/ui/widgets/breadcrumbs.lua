@@ -28,6 +28,7 @@ local MAX_ICON_SIZE = 64
 local MIN_DEFAULT_HEIGHT = 18
 local HOVER_SPEED = 16
 
+--- Clamps an optional number into a range, using the minimum for invalid input.
 --- @param value number|nil Value to clamp.
 --- @param min number Lower bound.
 --- @param max number Upper bound.
@@ -39,6 +40,7 @@ local function clampNumber(value, min, max)
     return math.max(min, math.min(max, value))
 end
 
+--- Coerces an optional number to a finite non-negative value.
 --- @param value number|nil Value to sanitise.
 --- @param fallback number Value used for nil, NaN and non-numbers.
 --- @return number resolved Non-negative finite value.
@@ -115,8 +117,8 @@ addDrawMethods(Breadcrumbs)
 --- @field opts.separatorColor PallidColor|nil Separator colour.
 --- @field opts.ellipsisColor PallidColor|nil Ellipsis marker colour.
 --- @field opts.disabledColor PallidColor|nil Colour of disabled crumbs.
---- @field opts.onSelect fun(breadcrumbs: PallidBreadcrumbs, index: integer, item: PallidOption)|nil
---- @field opts.onOverflow fun(breadcrumbs: PallidBreadcrumbs, hiddenCount: integer)|nil
+--- @field opts.onSelect fun(breadcrumbs: PallidBreadcrumbs, index: integer, item: PallidOption)|nil Called with the clicked crumb index and its item.
+--- @field opts.onOverflow fun(breadcrumbs: PallidBreadcrumbs, hiddenCount: integer)|nil Called with the number of hidden crumbs.
 --- @return PallidBreadcrumbs breadcrumbs New breadcrumb trail.
 function Breadcrumbs.new(x, y, w, h, items, opts)
     opts = opts or {}

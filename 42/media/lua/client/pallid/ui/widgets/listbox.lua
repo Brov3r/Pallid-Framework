@@ -75,6 +75,14 @@ function ListBox.new(x, y, w, h, opts)
         ellipsis = "...",
     }
 
+    --- Draws one row through the caller's render callback or the default row.
+    --- @param el ISUIElement Host element.
+    --- @param index integer One-based item index.
+    --- @param rowX number Row left.
+    --- @param rowY number Row top.
+    --- @param rowW number Row width.
+    --- @param rowH number Row height.
+    --- @param state PallidVirtualRowState Reused row state.
     local function rowRender(el, index, rowX, rowY, rowW, rowH, state)
         if self.render ~= nil then
             self.render(el, index, rowX, rowY, rowW, rowH, state, self.items[index], self)
@@ -97,6 +105,10 @@ function ListBox.new(x, y, w, h, opts)
         end,
     })
     self.list.acceptsFocus = true
+    --- Forwards a key press from the inner list to the list box handler.
+    --- @param _ PallidVirtualList Inner list that received the key; unused.
+    --- @param key integer Keyboard.KEY_* value.
+    --- @return boolean handled True when the list consumed the key.
     self.list.onKeyPress = function(_, key)
         return self:onKeyPress(key)
     end
@@ -162,17 +174,20 @@ function ListBox:setSelected(index, silent)
     return self
 end
 
+--- Returns the index of the selected row.
 --- @return integer|nil index Selected index, or nil.
 function ListBox:getSelected()
     return self.list.selected
 end
 
+--- Returns the normalised item for the selected row.
 --- @return PallidOption|nil item Selected item, or nil.
 function ListBox:getSelectedItem()
     local index = self.list.selected
     return index ~= nil and self.items[index] or nil
 end
 
+--- Returns the normalised item at a one-based index.
 --- @param index integer One-based item index.
 --- @return PallidOption|nil item Item at the index.
 function ListBox:getItem(index)
@@ -197,6 +212,7 @@ function ListBox:scrollToItem(index)
     return self
 end
 
+--- Invokes the `onSelect` callback for the given index.
 --- @param index integer|nil Selected index.
 function ListBox:_notifySelect(index)
     if self.onSelect ~= nil then

@@ -89,6 +89,7 @@ function Flow:setBounds(x, y, w, h)
     return self
 end
 
+--- Measures a child, falling back to its current bounds.
 --- @param child PallidWidget Child to measure.
 --- @param maxW number Available inner width.
 --- @return number width Child width in pixels.

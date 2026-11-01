@@ -55,6 +55,7 @@ for i = 0, 23 do
     HOUR_LABELS[i + 1] = string.format("%02d", i)
 end
 
+--- Floors a value and clamps it to an inclusive range.
 --- @param value number Value to process.
 --- @param lo number Inclusive lower bound.
 --- @param hi number Inclusive upper bound.
@@ -96,6 +97,7 @@ local function readGameTime()
     return gameTime:getHour(), gameTime:getMinutes()
 end
 
+--- Reads the local system time, or nil when unavailable.
 --- @return integer|nil hour Hour value, or nil.
 --- @return integer|nil minute Minute value, or nil.
 local function readRealTime()
@@ -106,6 +108,7 @@ local function readRealTime()
     return nil
 end
 
+--- Resolves the initial time from the game clock, real time or midnight.
 --- @return integer hour Hour value, or nil.
 --- @return integer minute Minute value, or nil.
 local function resolveTime()
@@ -171,6 +174,7 @@ function TimeColumn.new(x, y, w, h, opts)
     return self
 end
 
+--- Returns the largest valid scroll offset.
 --- @return number maxScroll Highest valid scroll offset.
 function TimeColumn:_maxScroll()
     return math.max(0, self.count * self.rowHeight - self.h)
@@ -197,6 +201,7 @@ function TimeColumn:setSelected(index, notify)
     return self
 end
 
+--- Finds the row under a root-local Y coordinate.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return integer index 1-based row, or 0 outside.
 function TimeColumn:_indexAt(py)
@@ -293,14 +298,14 @@ end
 --- Compact time field with a clock icon. Opens a two-column popover: hours on
 --- the left, minutes on the right, a preview and Now/Cancel/OK buttons.
 --- @class PallidTimePicker : PallidPickerField
---- @field hour integer 0..23
+--- @field hour integer 0..23 Selected hour.
 --- @field minute integer 0..59, a multiple of `step`.
 --- @field step integer Minute step; always a divisor of 60.
 --- @field popover PallidPopover|nil Created on first open.
 --- @field hourList PallidTimeColumn|nil Hour column, or nil.
 --- @field minuteList PallidTimeColumn|nil Minute column, or nil.
 --- @field preview PallidLabel|nil Time preview label, or nil.
---- @field onChange fun(picker: PallidTimePicker, hour: integer, minute: integer)|nil
+--- @field onChange fun(picker: PallidTimePicker, hour: integer, minute: integer)|nil Called when the applied time changes.
 local TimePicker = Widgets.class("TimePicker", PickerField)
 
 --- Creates a new `TimePicker` instance.
@@ -312,7 +317,7 @@ local TimePicker = Widgets.class("TimePicker", PickerField)
 --- @field opts.value table|nil `{ hour, minute }`; overrides the default.
 --- @field opts.minuteStep integer|nil Snapped to a divisor of 60. Defaults to 5.
 --- @field opts.icon string|false|nil Icon name or texture path; false hides it.
---- @field opts.onChange fun(picker: PallidTimePicker, hour: integer, minute: integer)|nil
+--- @field opts.onChange fun(picker: PallidTimePicker, hour: integer, minute: integer)|nil Called when the applied time changes.
 --- @field opts.radius number|nil Defaults to 4.
 --- @return PallidTimePicker picker New time picker.
 function TimePicker.new(x, y, w, h, opts)
@@ -417,12 +422,14 @@ function TimePicker:setTime(hour, minute)
     return self
 end
 
+--- Applies a selected hour and refreshes the field text.
 --- @param hour integer Selected hour.
 function TimePicker:_onHour(hour)
     self.hour = clampInt(hour, 0, 23)
     self:_refreshText()
 end
 
+--- Applies a selected minute snapped to the step and refreshes the text.
 --- @param minute integer Selected minute.
 function TimePicker:_onMinute(minute)
     self.minute = self:_snapMinute(minute)
@@ -443,6 +450,7 @@ function TimePicker:_commit()
     end
 end
 
+--- Commits the current value and closes the popover.
 function TimePicker:_confirm()
     self:_commit()
     self:close()
@@ -486,6 +494,7 @@ function TimePicker:_ensurePopover()
     end
 
     local content = Widgets.widget(0, 0, POPOVER_WIDTH, POPOVER_HEIGHT)
+    --- Commits the visible value unless the popover is closing as a cancel.
     content.onClose = function()
         if self._cancelOnClose then
             self._cancelOnClose = false
@@ -494,6 +503,7 @@ function TimePicker:_ensurePopover()
         end
     end
     -- The root calls this when Escape closes the popover, so Esc cancels.
+    --- Reverts to the value captured on open when Escape closes the popover.
     content.onCancel = function()
         self:_cancel()
     end

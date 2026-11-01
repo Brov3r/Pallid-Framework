@@ -42,6 +42,7 @@ local PALETTE = {
 -- One warning per bad source name; a list can rebuild avatars often.
 local warnedSources = {}
 
+--- Logs a source warning once per name.
 --- @param source string Source name that failed to resolve.
 local function warnSource(source)
     if warnedSources[source] == nil then
@@ -64,6 +65,7 @@ local function isTextureLike(value)
     return value.getWidth ~= nil
 end
 
+--- Returns an independent copy of a color.
 --- @param color PallidColor Color to copy.
 --- @return PallidColor Copied color.
 local function copyColor(color)
@@ -90,6 +92,7 @@ local function firstGlyph(word)
     return string.sub(word, 1, length)
 end
 
+--- Builds uppercase initials from a display name.
 --- @param name string|nil Display name, or nil.
 --- @return string Initials, or "?" when the name is empty.
 local function makeInitials(name)
@@ -107,6 +110,7 @@ local function makeInitials(name)
     return string.upper(firstGlyph(word))
 end
 
+--- Computes a stable numeric hash from a string.
 --- @param text string Text to hash.
 --- @return integer Stable hash in 0..1000002.
 local function hashName(text)
@@ -117,12 +121,14 @@ local function hashName(text)
     return hash
 end
 
+--- Checks whether a value looks like a 17-digit Steam ID.
 --- @param value string|nil Value to test.
 --- @return boolean True when the value is a 17-digit Steam ID.
 local function isSteamID(value)
     return type(value) == "string" and #value == 17 and string.match(value, "^%d+$") ~= nil
 end
 
+--- Normalizes a corner alias to a supported corner name.
 --- @param side string|nil Corner name.
 --- @return string side Normalized corner name.
 local function normalizeSide(side)
@@ -142,6 +148,7 @@ local function normalizeSide(side)
     return "top-right"
 end
 
+--- Normalizes a badge shape name, defaulting to "pill".
 --- @param shape string|nil Shape name.
 --- @return string shape "pill", "circle" or "dot".
 local function normalizeShape(shape)
@@ -410,6 +417,7 @@ function Avatar:_clearSource()
     self._steamSource = false
 end
 
+--- Resets the Steam lookup backoff state.
 function Avatar:_resetSteamRetry()
     self._steamTimer = 0
     self._steamAttempts = 0
@@ -604,6 +612,7 @@ function Avatar:_avatarBox()
     return 0, 0, self.w, self.h
 end
 
+--- Resolves badge dimensions and shape from the avatar box.
 --- @param opts table Badge option table.
 --- @return table opts Badge constructor options.
 function Avatar:_badgeOptions(opts)
@@ -896,6 +905,7 @@ function Avatar:setEnabled(enabled)
     return self
 end
 
+--- Selects the initials font from the avatar size.
 function Avatar:_selectFont()
     local size = math.min(self.w, self.h)
     if size >= 96 then

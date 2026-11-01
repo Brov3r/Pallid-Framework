@@ -75,6 +75,7 @@ function Widgets.searchField(x, y, w, h, opts)
     return SearchField.new(x, y, w, h, opts)
 end
 
+--- Returns the clear button zone in root-local coordinates.
 --- @return number zoneX Clear-zone left edge in root-local coordinates.
 --- @return number zoneY Clear-zone top edge.
 --- @return number zoneW Clear-zone width.
@@ -83,6 +84,7 @@ function SearchField:clearRect()
     return self:originX() + self.w - RIGHT_INSET, self:originY() + 2, RIGHT_INSET - 2, self.h - 4
 end
 
+--- Returns true when a point lies on the visible clear button.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 --- @return boolean inside True when the point is on the clear button.
@@ -140,6 +142,7 @@ function SearchField:onUpdate(now, dt)
     end
 end
 
+--- Reports the search text to `onSearch` when it changed.
 --- @param text string Text to report to `onSearch`.
 function SearchField:_emitSearch(text)
     if text == self._lastSearchText then

@@ -15,10 +15,10 @@ local Color    = Pallid.UI.Color
 --- A zone that rejects a payload does not block an accepting zone below it.
 ---@class PallidDropZone : PallidWidget
 --- @field accepts fun(payload: table, source: PallidWidget|nil, px: number, py: number): boolean|nil
---- @field onDrop fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field onDragEnter fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field onDragMove fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field onDragLeave fun(payload: table, source: PallidWidget|nil)|nil
+--- @field onDrop fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when a payload is dropped on the zone.
+--- @field onDragEnter fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when a dragged payload enters the zone.
+--- @field onDragMove fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when the pointer moves while a payload hovers.
+--- @field onDragLeave fun(payload: table, source: PallidWidget|nil)|nil Called when a dragged payload leaves the zone.
 --- @field color PallidColor Outline color.
 --- @field invalidColor PallidColor Outline color for an invalid drop.
 --- @field alwaysOutline boolean True draws the outline without a drag.
@@ -35,10 +35,10 @@ local DropZone = Widgets.class("DropZone")
 --- @param h number Height in pixels.
 --- @param opts table|nil Drop zone options.
 --- @field opts.accepts fun(payload: table, source: PallidWidget|nil, px: number, py: number): boolean|nil Defaults to accepting everything.
---- @field opts.onDrop fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field opts.onDragEnter fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field opts.onDragMove fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil
---- @field opts.onDragLeave fun(payload: table, source: PallidWidget|nil)|nil
+--- @field opts.onDrop fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when a payload is dropped on the zone.
+--- @field opts.onDragEnter fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when a dragged payload enters the zone.
+--- @field opts.onDragMove fun(payload: table, source: PallidWidget|nil, px: number, py: number)|nil Called when the pointer moves while a payload hovers.
+--- @field opts.onDragLeave fun(payload: table, source: PallidWidget|nil)|nil Called when a dragged payload leaves the zone.
 --- @field opts.color PallidColor|nil Valid highlight. Defaults to Color.accent.
 --- @field opts.invalidColor PallidColor|nil Defaults to Color.danger.
 --- @field opts.background PallidColor|nil Idle fill.
@@ -101,6 +101,7 @@ function DropZone:onDetach()
     end
 end
 
+--- Evaluates the accepts predicate for a payload.
 --- @param payload table Drag payload.
 --- @param source PallidWidget|nil Widget that owns the drag.
 --- @param px number Root-local pointer X.

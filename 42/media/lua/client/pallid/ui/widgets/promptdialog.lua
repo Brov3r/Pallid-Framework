@@ -77,6 +77,8 @@ function PromptDialog.new(opts)
             },
         },
     })
+    --- Reports a cancelled prompt through the cancel callback.
+    --- @param button table|nil Pressed button descriptor.
     self.dialog.onResult = function(button)
         if button ~= nil and button.negative then
             self:_cancel()
@@ -111,11 +113,13 @@ function PromptDialog:close()
     return self
 end
 
+--- Returns true while the prompt is visible.
 --- @return boolean open True while the prompt is visible.
 function PromptDialog:isOpen()
     return self.dialog:isOpen()
 end
 
+--- Returns the current field text.
 --- @return string value Current field text.
 function PromptDialog:getValue()
     return self.input:getText()
@@ -154,6 +158,7 @@ function PromptDialog:_submit()
     end
 end
 
+--- Invokes the cancel callback without firing a result.
 function PromptDialog:_cancel()
     if self.onCancel ~= nil then
         self.onCancel(self)

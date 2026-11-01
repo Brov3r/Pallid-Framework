@@ -122,6 +122,7 @@ function Widgets.segmentedControl(x, y, w, h, options, opts)
     return Segmented.new(x, y, w, h, options, opts)
 end
 
+--- Reports whether an index is an integer inside the item list.
 --- @param index integer Candidate segment index.
 --- @return boolean valid True when index is an integer inside the list.
 function Segmented:_validIndex(index)
@@ -377,6 +378,7 @@ function Segmented:segmentRect(index)
     return self:originX() + (index - 1) * segmentW, segmentW
 end
 
+--- Maps a cursor X position to the segment index under it.
 --- @param px number Cursor X in root-local coordinates.
 --- @return integer|nil index Segment under the cursor, or nil outside.
 function Segmented:_indexAt(px)

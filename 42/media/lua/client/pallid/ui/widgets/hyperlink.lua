@@ -44,7 +44,7 @@ local Hyperlink = Widgets.class("Hyperlink")
 --- @param h number|nil Defaults to 18; zero or negative also falls back to it.
 --- @param opts table|nil Hyperlink options.
 --- @field opts.url string|nil Passed to `onClick`.
---- @field opts.onClick fun(link: PallidHyperlink, url: string|nil)|nil
+--- @field opts.onClick fun(link: PallidHyperlink, url: string|nil)|nil Called when the link is activated.
 --- @field opts.color PallidColor|nil Resting text colour.
 --- @field opts.hoverColor PallidColor|nil Hover text and underline colour.
 --- @field opts.font UIFont|string|nil Font or a key from Pallid.UI.Fonts.

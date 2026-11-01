@@ -62,7 +62,7 @@ Pallid.UI.Textures.registerIcon(ARROW_ICONS.down, ICON_DIR .. "arrow-down.png")
 --- @field contentPadding number Inner padding around the active page.
 --- @field scrollable boolean Whether the strip may scroll.
 --- @field hoverIndex integer Tab under the cursor, 0 when none.
---- @field onChange fun(panel: PallidTabPanel, index: integer)|nil
+--- @field onChange fun(panel: PallidTabPanel, index: integer)|nil Called when the active tab changes.
 --- @field closable boolean Default closable state for tabs without their own flag.
 --- @field onClose fun(panel: PallidTabPanel, index: integer, tab: table)|nil Called after a tab is closed by its cross.
 --- @field dragThreshold number Pixels the pointer must travel before a tab drag starts.
@@ -98,6 +98,7 @@ local function resolveTabIcon(tab)
     end
 end
 
+--- Returns an independent copy of a colour.
 --- @param color PallidColor Source colour.
 --- @return PallidColor copy Independent table with the same channels.
 local function copyColor(color)
@@ -129,7 +130,7 @@ end
 --- @field opts.closable boolean|nil True draws a close cross on every tab; per-tab `closable` overrides.
 --- @field opts.dragThreshold number|nil Pixels before a tab starts dragging, defaults to 4.
 --- @field opts.onClose fun(panel: PallidTabPanel, index: integer, tab: table)|nil Called after a tab is closed by its cross.
---- @field opts.onChange fun(panel: PallidTabPanel, index: integer)|nil
+--- @field opts.onChange fun(panel: PallidTabPanel, index: integer)|nil Called when the active tab changes.
 --- @return PallidTabPanel panel New tab panel instance.
 function TabPanel.new(x, y, w, h, tabs, opts)
     opts = opts or {}
@@ -645,6 +646,7 @@ local TAB_FILL2 = { r = 0, g = 0, b = 0, a = 1 }
 local TAB_TEXT = { r = 1, g = 1, b = 1, a = 1 }
 local TAB_ACCENT = { r = 1, g = 1, b = 1, a = 1 }
 
+--- Blends two colours into a scratch table without allocating.
 --- @param out PallidColor Scratch colour written in place.
 --- @param from PallidColor Colour at t = 0.
 --- @param to PallidColor Colour at t = 1.
@@ -749,6 +751,7 @@ function TabPanel:_drawTabClose(el, index, ax, ay, aw, ah, textColor)
     Pallid.UI.line(el, cx - CLOSE_MARK, cy + CLOSE_MARK, cx + CLOSE_MARK, cy - CLOSE_MARK, 1, color)
 end
 
+--- Draws a circular scroll arrow with its icon.
 --- @param el ISUIElement Host element the arrow is drawn into.
 --- @param px number Arrow center X.
 --- @param py number Arrow center Y.
@@ -962,6 +965,7 @@ function TabPanel:_refreshHover()
     self:_updateHover(root.mouseX, root.mouseY)
 end
 
+--- Refreshes the hovered tab, close cross and scroll arrow from a pointer position.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
 function TabPanel:_updateHover(px, py)

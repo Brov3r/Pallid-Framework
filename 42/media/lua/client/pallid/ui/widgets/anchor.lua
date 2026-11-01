@@ -111,6 +111,7 @@ function Anchor:setBounds(x, y, w, h)
     return self
 end
 
+--- Measures the content and falls back to its current size when a preferred size is not positive.
 --- @param content PallidWidget Content to measure.
 --- @return number width Content width in pixels.
 --- @return number height Content height in pixels.

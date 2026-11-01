@@ -162,6 +162,7 @@ function PropertyGrid:setProperties(properties)
     return self
 end
 
+--- Returns true when a property matches the current search text.
 --- @param property table Property descriptor.
 --- @return boolean visible True when it matches the search filter.
 function PropertyGrid:_matches(property)

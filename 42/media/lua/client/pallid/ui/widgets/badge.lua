@@ -24,6 +24,7 @@ local Widgets = Pallid.UI.Widgets
 --- @field autoHeight boolean True while the height is left to the widget.
 local Badge = Widgets.class("Badge")
 
+--- Copies a colour so the badge owns an independent table.
 --- @param color PallidColor Source colour.
 --- @return PallidColor copy Independent colour table.
 local function copyColor(color)

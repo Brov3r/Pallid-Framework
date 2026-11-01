@@ -46,8 +46,8 @@ local InputText = Widgets.class("InputText", Widgets.InputBase)
 --- @field opts.border PallidColor|false|nil Field border; false disables it.
 --- @field opts.borderWidth number|nil Border thickness; defaults to 1.
 --- @field opts.transparent boolean|nil Draws no widget or native chrome.
---- @field opts.onChange fun(input: PallidInputBase, text: string, raw: string)|nil
---- @field opts.onSubmit fun(input: PallidInputBase, text: string, raw: string)|nil
+--- @field opts.onChange fun(input: PallidInputBase, text: string, raw: string)|nil Called after the value changes.
+--- @field opts.onSubmit fun(input: PallidInputBase, text: string, raw: string)|nil Called when Enter is pressed.
 --- @return PallidInputText input New single-line field.
 function InputText.new(x, y, w, h, opts)
     local self = setmetatable({}, InputText)

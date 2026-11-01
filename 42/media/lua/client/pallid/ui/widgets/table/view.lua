@@ -39,6 +39,9 @@ return function(Table)
         if key ~= nil and count > 1 then
             local ascending = self.sortAsc
 
+            --- Ranks a value by type so mixed columns sort predictably.
+            --- @param value any Cell value.
+            --- @return integer rank Type rank: numbers, strings, booleans, others.
             local function rank(value)
                 local kind = type(value)
                 if kind == "number" then

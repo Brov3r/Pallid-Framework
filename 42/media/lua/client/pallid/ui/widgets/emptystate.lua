@@ -52,6 +52,7 @@ Pallid.UI.Textures.registerIcon(ICONS.default, ICON_DIR .. "document.png")
 --- @field iconFloat PallidAnimTrack|nil Looping icon pulse track.
 local EmptyState = Widgets.class("EmptyState")
 
+--- Creates a new `EmptyState` instance.
 --- @param x number X coordinate.
 --- @param y number Y coordinate.
 --- @param w number Width in pixels.

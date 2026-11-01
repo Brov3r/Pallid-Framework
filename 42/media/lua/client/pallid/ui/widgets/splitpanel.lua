@@ -99,6 +99,8 @@ function SplitPanel:onDetach()
     end
 end
 
+--- Keeps the ratio within the pane minimum sizes.
+--- @param self PallidSplitPanel Split panel whose ratio is clamped.
 local function clampRatio(self)
     local horizontal = self.orientation == "horizontal"
     local total = math.max(0, horizontal and self.w or self.h)
@@ -118,6 +120,7 @@ local function clampRatio(self)
     self.ratio = first / space
 end
 
+--- Tells whether a split-relative point falls inside a pane.
 --- @param pane PallidPanel Pane whose local bounds are tested.
 --- @param lx number Cursor X relative to the split panel.
 --- @param ly number Cursor Y relative to the split panel.

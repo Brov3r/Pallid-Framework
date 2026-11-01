@@ -148,6 +148,7 @@ return function(Menu)
             self.h - self.padding * 2 - 4
     end
 
+    --- Computes scrollbar track and thumb geometry, or nil without scrolling.
     --- @return number|nil x Track X.
     --- @return number|nil y Track Y.
     --- @return number|nil h Track height.

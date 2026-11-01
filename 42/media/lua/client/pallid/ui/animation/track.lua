@@ -67,7 +67,7 @@ Anim.Track = Track
 --- @field rotation number[]|nil {from, to} pair in degrees.
 --- @field value number[]|nil {from, to} pair exposed as track.number.
 --- @field color { from: PallidColor, to: PallidColor }|nil Exposed as track.color.
---- @field onComplete fun(track: PallidAnimTrack)|nil
+--- @field onComplete fun(track: PallidAnimTrack)|nil Called once when the last pass is reached.
 
 --- Creates a track. Nothing is allocated after this call.
 --- @param opts PallidAnimOpts|nil Track options; copied and may be discarded.

@@ -20,6 +20,7 @@ Pallid.UI.Color = Color
 -- paths do not pay for a table lookup.
 local clamp = I.clamp
 
+--- Builds a color table from the given components without clamping.
 --- @param r number Red component, 0..1.
 --- @param g number Green component, 0..1.
 --- @param b number Blue component, 0..1.

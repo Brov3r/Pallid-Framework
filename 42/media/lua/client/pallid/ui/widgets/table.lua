@@ -322,9 +322,15 @@ function Table.new(x, y, w, h, columns, rows, opts)
 
     self.barV = Widgets.scrollBar(true, w - self.barSize, self.headerHeight, self.barSize, h - self.headerHeight, { margin = 1 })
     self.barH = Widgets.scrollBar(false, 0, h - self.barSize, w, self.barSize, { margin = 1 })
+    --- Scrolls the view vertically when the vertical scroll bar moves.
+    --- @param _ PallidScrollBar Scroll bar that changed; unused.
+    --- @param value number Scroll position in 0..1.
     self.barV.onChange = function(_, value)
         self.scrollY = math.floor(value * (self.maxScrollY or 0))
     end
+    --- Scrolls the view horizontally when the horizontal scroll bar moves.
+    --- @param _ PallidScrollBar Scroll bar that changed; unused.
+    --- @param value number Scroll position in 0..1.
     self.barH.onChange = function(_, value)
         self.scrollX = math.floor(value * (self.maxScrollX or 0))
     end

@@ -24,7 +24,7 @@ local ICON_OPTS = { mode = "fit" }
 --- @class PallidDropdown : PallidPopupSelect
 --- @field selected integer 1-based selected option, or 0 when nothing is selected.
 --- @field placeholder string Text shown when nothing is selected.
---- @field onChange fun(dropdown: PallidDropdown, index: integer, value: any, item: PallidOption)|nil
+--- @field onChange fun(dropdown: PallidDropdown, index: integer, value: any, item: PallidOption)|nil Called when the selection changes.
 local Dropdown = Widgets.class("Dropdown", PopupSelect)
 
 --- Creates a new `Dropdown` instance.
@@ -144,11 +144,13 @@ function Dropdown:clearSelection(silent)
     return self
 end
 
+--- Returns the row that should start highlighted in the list.
 --- @return integer|nil index Valid index.
 function Dropdown:_initialHighlight()
     return self.selected ~= 0 and self.selected or 0
 end
 
+--- Selects a row, notifies the change callback and closes the list.
 --- @param index integer Option index.
 function Dropdown:_activateRow(index)
     if self:_rowDisabled(index) then
@@ -164,6 +166,7 @@ function Dropdown:_activateRow(index)
     self:close()
 end
 
+--- Returns true when the row is the current selection.
 --- @param index integer Option index.
 --- @return boolean checked True for the selected option.
 function Dropdown:_isRowChecked(index)
@@ -195,6 +198,7 @@ function Dropdown:_refreshFieldLayout()
     )
 end
 
+--- Draws the icon and label shown in the closed field.
 --- @param el ISUIElement Host element.
 --- @param x number Field left.
 --- @param y number Field top.
@@ -225,6 +229,7 @@ function Dropdown:_drawFieldContent(el, x, y)
     self.style.color = base
 end
 
+--- Draws the check marker for the selected row.
 --- @param el ISUIElement Host element.
 --- @param item PallidOption Row item.
 --- @param index integer Row index.

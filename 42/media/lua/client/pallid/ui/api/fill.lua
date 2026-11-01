@@ -115,6 +115,7 @@ local function drawCorner(el, x, y, r, quadX, quadY, cx, cy, a0, a1, color)
 end
 I.drawCorner = drawCorner
 
+--- Draws a filled ellipse, using the AA circle texture for near-circular sizes.
 --- @param el ISUIElement Target element.
 --- @param x number Left coordinate.
 --- @param y number Top coordinate.
@@ -137,6 +138,7 @@ local function fillEllipse(el, x, y, w, h, color)
 end
 I.fillEllipse = fillEllipse
 
+--- Draws one triangle of a fan around a shared centre point.
 --- @param el ISUIElement Target element.
 --- @param white Texture White texture used as the quad fill.
 --- @param cx number Center X.
@@ -153,6 +155,7 @@ local function fanTriangle(el, white, cx, cy, ax, ay, bx, by, r, g, b, a)
     el:drawPolygon(white, cx, cy, ax, ay, bx, by, cx, cy, r, g, b, a)
 end
 
+--- Draws a triangle fan sweeping the given arc around a circle centre.
 --- @param el ISUIElement Target element.
 --- @param white Texture White texture used as the quad fill.
 --- @param cx number Center X.

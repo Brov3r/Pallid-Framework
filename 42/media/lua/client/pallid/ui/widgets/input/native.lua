@@ -5,6 +5,7 @@ Pallid.UI = Pallid.UI or {}
 --- @param Input table PallidInputBase class.
 --- @return fun Augmenter that installs the methods.
 return function(Input)
+    --- Tells whether a widget is the overlay itself or one of its descendants.
     --- @param input PallidWidget Widget to test.
     --- @param overlay PallidWidget Overlay being checked.
     --- @return boolean inside True when `input` belongs to the overlay's subtree.

@@ -171,6 +171,7 @@ return function(Modal)
         end
     end
 
+    --- Returns the index of the button containing the given point.
     --- @param px number Cursor X.
     --- @param py number Cursor Y.
     --- @return integer|nil index Button under the cursor.
@@ -213,6 +214,7 @@ return function(Modal)
         return nil
     end
 
+    --- Plays the click sound, closes the dialog and fires the button callbacks.
     --- @param index integer Button index.
     function Modal:_activateButton(index)
         local button = self.buttons[index]
@@ -231,6 +233,7 @@ return function(Modal)
         end
     end
 
+    --- Creates and lays out the button widgets if needed, then draws them.
     --- @param el ISUIElement Host element.
     function Modal:_drawButtons(el)
         if self._buttonWidgets == nil or #self._buttonWidgets ~= #self.buttons then

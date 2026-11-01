@@ -113,11 +113,13 @@ function DurationInput:setBounds(x, y, w, h)
     return self
 end
 
+--- Returns the seconds-per-unit factor of the current unit.
 --- @return number factor Seconds per selected unit.
 function DurationInput:_factor()
     return self.factors[self.unit] or 1
 end
 
+--- Formats a numeric value with the configured decimal places.
 --- @param number number Visible numeric value.
 --- @return string text Trimmed decimal text.
 function DurationInput:_format(number)
@@ -175,6 +177,7 @@ function DurationInput:setValue(seconds, silent)
     return self
 end
 
+--- Returns the duration in seconds.
 --- @return number seconds Current duration in seconds.
 function DurationInput:getValue()
     return self.value
@@ -196,6 +199,7 @@ function DurationInput:setUnit(unit, silent)
     return self
 end
 
+--- Returns the current unit key.
 --- @return string unit Current unit key.
 function DurationInput:getUnit()
     return self.unit

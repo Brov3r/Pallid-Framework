@@ -14,6 +14,7 @@ local ALLOWED = {
     "https://pzwiki.net",
 }
 
+--- Tells whether a URL starts with one of the whitelisted Indie Stone prefixes.
 --- @param url string URL to check.
 --- @return boolean True when the engine will hand the URL to the browser.
 local function isAllowed(url)

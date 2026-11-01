@@ -43,6 +43,7 @@ local PickerField = Widgets.class("PickerField")
 --- @field opts.radius number|nil Corner radius; defaults to 4.
 --- @field opts.icon string|false|nil Registered icon name or texture path; false hides the icon.
 --- @field opts.onChange function|nil Change callback owned by the subclass.
+--- @return PallidPickerField self The same instance, for chaining.
 function PickerField:_initField(x, y, w, h, opts)
     self:init(x, y, w, h)
 

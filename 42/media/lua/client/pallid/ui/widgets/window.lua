@@ -65,11 +65,12 @@ Pallid.UI.Textures.registerIcon(ICONS.grip, ICON_DIR .. "corner.png")
 --- @field closeButton PallidButton Close caption button.
 --- @field collapseButton PallidButton Collapse/expand caption button.
 --- @field pinButton PallidButton Pin caption button.
---- @field onClose fun(window: PallidWindow)|nil
---- @field onMoved fun(window: PallidWindow)|nil
---- @field onResized fun(window: PallidWindow)|nil
+--- @field onClose fun(window: PallidWindow)|nil Called after the window closes.
+--- @field onMoved fun(window: PallidWindow)|nil Called after the window is moved.
+--- @field onResized fun(window: PallidWindow)|nil Called after the window is resized.
 local Window = Widgets.class("Window")
 
+--- Creates a caption button bound to the window.
 --- @param window PallidWindow Window that owns the button.
 --- @param iconName string Registered icon name.
 --- @param iconColor PallidColor Icon tint.
@@ -259,6 +260,7 @@ local function buttonX(window, kind)
     return right - BUTTON - BUTTON_GAP - BUTTON
 end
 
+--- Returns the caption button for a zone name.
 --- @param window PallidWindow Window that owns the buttons.
 --- @param zone string|nil Caption zone.
 --- @return PallidButton|nil button Caption button for the zone, if any.
