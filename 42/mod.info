@@ -1,0 +1,9 @@
+name=Pallid Framework
+id=pallid-framework
+author=Brov3r
+description=A useful library for mod development.
+poster=poster.png
+icon=poster.png
+modversion=0.1.0
+versionMin=42.21.0
+category=features
