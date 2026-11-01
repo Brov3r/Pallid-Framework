@@ -107,6 +107,23 @@ function Label:setColor(color)
     return self
 end
 
+--- Returns the natural text size. Wrapping uses `maxW` when it is supplied.
+--- @param maxW number|nil Available width in pixels.
+--- @param maxH number|nil Available height in pixels; unused.
+--- @return number width Preferred width in pixels.
+--- @return number height Preferred height in pixels.
+function Label:preferredSize(maxW, maxH)
+    local style = self.style
+    local previous = style.maxWidth
+    style.maxWidth = maxW
+    local width, height = Pallid.UI.measureText(self.text, style)
+    style.maxWidth = previous
+    if maxW ~= nil and width > maxW then
+        width = maxW
+    end
+    return width, height
+end
+
 --- Draws the label into the host element.
 --- @param el ISUIElement Host element the tree is rendered into.
 function Label:drawSelf(el)

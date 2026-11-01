@@ -3,6 +3,7 @@ require "pallid/ui/api/color"
 require "pallid/ui/api/draw"
 require "pallid/ui/api/text"
 require "pallid/ui/widgets/widget"
+local ValueField = require "pallid/ui/widgets/internal/value_field"
 
 Pallid = Pallid or {}
 Pallid.UI = Pallid.UI or {}
@@ -15,6 +16,22 @@ local BUBBLE_HOLD = 2.5
 local BUBBLE_FADE = 10
 local BUBBLE_LIFT = 15
 local LABEL_GAP = 12
+
+--- Draws one short tick across the track.
+--- @param el ISUIElement Target element.
+--- @param vertical boolean True for a vertical slider.
+--- @param x number Tick center X.
+--- @param y number Tick center Y.
+--- @param size number Tick length in pixels.
+--- @param color PallidColor Tick color.
+local function drawTick(el, vertical, x, y, size, color)
+    local half = size * 0.5
+    if vertical then
+        Pallid.UI.line(el, x - half, y, x + half, y, 1, color)
+    else
+        Pallid.UI.line(el, x, y - half, x, y + half, 1, color)
+    end
+end
 
 --- Numeric slider. Horizontal sliders show a value bubble above the thumb and
 --- the min/max values beside the track ends, level with the track; vertical ones
@@ -29,6 +46,10 @@ local LABEL_GAP = 12
 --- @field format string string.format pattern used for values.
 --- @field dragging boolean True while the knob is dragged.
 --- @field grabT number Grab offset along the track, in normalized units.
+--- @field tickCount integer Number of equal tick marks; 0 disables them.
+--- @field tickValues table|nil Explicit tick values; overrides `tickCount` when set.
+--- @field tickSize number Tick length in pixels.
+--- @field tickColor PallidColor Tick colour.
 --- @field onChange fun(slider: PallidSlider, value: number)|nil Callback after a value change.
 local Slider = Widgets.class("Slider")
 
@@ -45,6 +66,9 @@ local Slider = Widgets.class("Slider")
 --- @field opts.step number|nil Snap step, defaults to 0 (continuous).
 --- @field opts.showValue boolean|nil Enables the value bubble and min/max labels.
 --- @field opts.format string|nil string.format pattern, defaults to "%.0f".
+--- @field opts.ticks number|table|nil Equal tick count, or explicit tick values.
+--- @field opts.tickSize number|nil Tick length in pixels, defaults to 4.
+--- @field opts.tickColor PallidColor|nil Tick colour, defaults to textDisabled.
 --- @field opts.onChange fun(slider: PallidSlider, value: number)|nil Callback after a value change.
 --- @return PallidSlider slider New slider instance.
 function Slider.new(x, y, w, h, opts)
@@ -65,6 +89,10 @@ function Slider.new(x, y, w, h, opts)
     self.format = opts.format or "%.0f"
     self.dragging = false
     self.grabT = 0
+    self.tickCount = type(opts.ticks) == "number" and math.max(0, math.floor(opts.ticks)) or 0
+    self.tickValues = type(opts.ticks) == "table" and opts.ticks or nil
+    self.tickSize = math.max(1, opts.tickSize or 4)
+    self.tickColor = opts.tickColor or Pallid.UI.Color.textDisabled
 
     self.grooveColor = Pallid.UI.Color.border
     self.fillColor = Pallid.UI.Color.primary
@@ -135,15 +163,7 @@ end
 --- @param silent boolean|nil True skips the callback.
 --- @return PallidSlider self For chaining.
 function Slider:setValue(value, silent)
-    local snapped = self:snap(value)
-    if snapped == self.value then
-        return self
-    end
-    self.value = snapped
-    if not silent and self.onChange ~= nil then
-        self.onChange(self, snapped)
-    end
-    return self
+    return ValueField.setValue(self, value, silent)
 end
 
 --- Returns the normalized knob position.
@@ -382,12 +402,7 @@ end
 --- Formats the value for the bubble.
 --- @return string text Formatted current value.
 function Slider:valueText()
-    if self.value ~= self._shownValue or self.format ~= self._shownFormat then
-        self._shownValue = self.value
-        self._shownFormat = self.format
-        self._shownText = string.format(self.format, self.value)
-    end
-    return self._shownText
+    return ValueField.valueText(self)
 end
 
 --- Draws the value bubble.
@@ -431,6 +446,45 @@ function Slider:drawSmall(el, text, x, y, alignH)
     style.color = base
 end
 
+--- Draws tick marks along the track. `tickValues` takes precedence over
+--- `tickCount` when both are configured.
+--- @param el ISUIElement Host element the tree is rendered into.
+--- @param trackX number Track left or center X.
+--- @param trackY number Track top or center Y.
+--- @param trackW number Track width; 0 for vertical sliders.
+--- @param trackH number Track height; 0 for horizontal sliders.
+function Slider:drawTicks(el, trackX, trackY, trackW, trackH)
+    local color = self:shade(self.tickColor)
+    local size = self.tickSize
+    local span = self.max - self.min
+
+    if self.tickValues ~= nil then
+        for i = 1, #self.tickValues do
+            local t = (self.tickValues[i] - self.min) / span
+            if t >= 0 and t <= 1 then
+                if self.vertical then
+                    drawTick(el, true, trackX, trackY + trackH * (1 - t), size, color)
+                else
+                    drawTick(el, false, trackX + trackW * t, trackY, size, color)
+                end
+            end
+        end
+        return
+    end
+
+    if self.tickCount < 2 then
+        return
+    end
+    for i = 1, self.tickCount do
+        local t = (i - 1) / (self.tickCount - 1)
+        if self.vertical then
+            drawTick(el, true, trackX, trackY + trackH * (1 - t), size, color)
+        else
+            drawTick(el, false, trackX + trackW * t, trackY, size, color)
+        end
+    end
+end
+
 --- Paints the widget into the host element.
 --- @param el ISUIElement Host element the tree is rendered into.
 function Slider:drawSelf(el)
@@ -452,6 +506,7 @@ function Slider:drawSelf(el)
             Pallid.UI.roundedRect(el, trackX - thickness * 0.5, trackY + trackH - fillH, thickness, fillH,
                 thickness * 0.5, self:shade(self.fillColor))
         end
+        self:drawTicks(el, trackX, trackY, 0, trackH)
         Pallid.UI.circle(el, knobX, knobY, KNOB_RADIUS, self:shade(self.knobBorder))
         Pallid.UI.circle(el, knobX, knobY, KNOB_RADIUS - 1, self:shade(self.knobColor))
         if self._valueAlpha > 0.01 then
@@ -468,6 +523,7 @@ function Slider:drawSelf(el)
         Pallid.UI.roundedRect(el, trackX, trackY - thickness * 0.5, fillW, thickness, thickness * 0.5,
             self:shade(self.fillColor))
     end
+    self:drawTicks(el, trackX, trackY, trackW, 0)
     Pallid.UI.circle(el, knobX, knobY, KNOB_RADIUS, self:shade(self.knobBorder))
     Pallid.UI.circle(el, knobX, knobY, KNOB_RADIUS - 1, self:shade(self.knobColor))
 

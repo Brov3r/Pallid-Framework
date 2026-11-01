@@ -23,6 +23,8 @@ local TAB_INSET = 2
 local SCROLL_SPEED = 18
 local SCROLL_EPSILON = 0.5
 local ICON_OPTS = { mode = "fit" }
+local CLOSE_W = 18
+local CLOSE_MARK = 3
 local TAB_CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 
 local ICON_DIR = "media/assets/ui/pallid/icons/"
@@ -61,6 +63,9 @@ Pallid.UI.Textures.registerIcon(ARROW_ICONS.down, ICON_DIR .. "arrow-down.png")
 --- @field scrollable boolean Whether the strip may scroll.
 --- @field hoverIndex integer Tab under the cursor, 0 when none.
 --- @field onChange fun(panel: PallidTabPanel, index: integer)|nil
+--- @field closable boolean Default closable state for tabs without their own flag.
+--- @field onClose fun(panel: PallidTabPanel, index: integer, tab: table)|nil Called after a tab is closed by its cross.
+--- @field dragThreshold number Pixels the pointer must travel before a tab drag starts.
 --- @field tabFill PallidColor Inactive tab fill.
 --- @field tabHover PallidColor Hovered tab fill.
 --- @field tabActive PallidColor Active tab fill.
@@ -121,6 +126,9 @@ end
 --- @field opts.tabActive PallidColor|nil Active tab fill.
 --- @field opts.tabAccent PallidColor|nil Active tab outline colour.
 --- @field opts.tabRadius number|nil Pill radius, defaults to 4.
+--- @field opts.closable boolean|nil True draws a close cross on every tab; per-tab `closable` overrides.
+--- @field opts.dragThreshold number|nil Pixels before a tab starts dragging, defaults to 4.
+--- @field opts.onClose fun(panel: PallidTabPanel, index: integer, tab: table)|nil Called after a tab is closed by its cross.
 --- @field opts.onChange fun(panel: PallidTabPanel, index: integer)|nil
 --- @return PallidTabPanel panel New tab panel instance.
 function TabPanel.new(x, y, w, h, tabs, opts)
@@ -153,6 +161,9 @@ function TabPanel.new(x, y, w, h, tabs, opts)
         end
     end
     self.onChange = opts.onChange
+    self.closable = opts.closable == true
+    self.onClose = opts.onClose
+    self._closeHover = 0
     self.scrollable = opts.scrollable ~= false
     self.minTabWidth = opts.minTabWidth or MIN_TAB_W
     self.maxTabWidth = math.max(self.minTabWidth, opts.maxTabWidth or MAX_TAB_W)
@@ -170,6 +181,14 @@ function TabPanel.new(x, y, w, h, tabs, opts)
     self._maxScroll = 0
     self.hoverIndex = 0
     self._hoverArrow = nil
+    self._dragIndex = nil
+    self._dragMoved = false
+    self._dragStartX = 0
+    self._dragStartY = 0
+    self._dragPx = nil
+    self._dragPy = nil
+    self._dragDir = 0
+    self._dragThreshold = opts.dragThreshold or 4
 
     for i = 1, count do
         self.tabs[i]._activeT = (i == self.active) and 1 or 0
@@ -247,7 +266,8 @@ function TabPanel:relayoutTabs()
         local gap = (iconW > 0 and title ~= "") and TAB_ICON_GAP or 0
 
         if self.position == "top" then
-            local width = manager:MeasureStringX(font, title) + iconW + gap + self.tabPadding * 2
+            local closeW = self:isTabClosable(i) and CLOSE_W or 0
+            local width = manager:MeasureStringX(font, title) + iconW + gap + closeW + self.tabPadding * 2
             width = math.max(self.minTabWidth, math.min(self.maxTabWidth, math.floor(width)))
             widths[i] = width
             prefix[i] = total
@@ -481,7 +501,9 @@ function TabPanel:removeTab(index)
     end
     table.remove(self.tabs, index)
 
-    if index < oldActive then
+    if #self.tabs == 0 then
+        self.active = 0
+    elseif index < oldActive then
         self.active = oldActive - 1
     elseif index == oldActive then
         self.active = math.max(1, math.min(oldActive, #self.tabs))
@@ -502,6 +524,118 @@ function TabPanel:removeTab(index)
         self.onChange(self, self.active)
     end
     return self
+end
+
+--- Returns true when a tab shows a close cross. A tab-level `closable` field
+--- overrides the panel default.
+--- @param index integer One-based tab index.
+--- @return boolean closable True when the tab can be closed by its cross.
+function TabPanel:isTabClosable(index)
+    local tab = self.tabs[index]
+    if tab == nil then
+        return false
+    end
+    if tab.closable ~= nil then
+        return tab.closable == true
+    end
+    return self.closable == true
+end
+
+--- Sets the close cross visibility for one tab.
+--- @param index integer One-based tab index.
+--- @param closable boolean True shows the close cross.
+--- @return PallidTabPanel self For chaining.
+function TabPanel:setTabClosable(index, closable)
+    local tab = self.tabs[index]
+    if tab ~= nil then
+        tab.closable = closable == true
+        self._tabsDirty = true
+        self:relayoutTabs()
+    end
+    return self
+end
+
+--- Moves a tab without changing the active page. The selection follows the
+--- moved tab, so `onChange` is not fired for a pure reorder.
+--- @param from integer Current one-based index.
+--- @param to integer Target one-based index.
+--- @return PallidTabPanel self For chaining.
+function TabPanel:moveTab(from, to)
+    local count = #self.tabs
+    from = math.floor(from or 0)
+    to = math.floor(to or 0)
+    if from < 1 or from > count or to < 1 or to > count or from == to then
+        return self
+    end
+
+    local activeTab = self.tabs[self.active]
+    local tab = table.remove(self.tabs, from)
+    table.insert(self.tabs, to, tab)
+
+    if activeTab ~= nil then
+        for i = 1, #self.tabs do
+            if self.tabs[i] == activeTab then
+                self.active = i
+                break
+            end
+        end
+    end
+
+    self._tabsDirty = true
+    self:layout()
+    self:relayoutTabs()
+    self:ensureActiveVisible()
+    self:_refreshHover()
+    return self
+end
+
+--- Returns the close-cross rectangle.
+--- @param index integer One-based tab index.
+--- @return number|nil x Root-local X, or nil when the tab has no cross.
+--- @return number|nil y Root-local Y.
+--- @return number|nil w Zone width.
+--- @return number|nil h Zone height.
+function TabPanel:tabCloseRect(index)
+    if not self:isTabClosable(index) then
+        return nil
+    end
+    local tx, ty, tw, th = self:tabRect(index)
+    if tw < CLOSE_W * 2 then
+        return nil
+    end
+    return self:originX() + tx + tw - CLOSE_W - 2, self:originY() + ty, CLOSE_W, th
+end
+
+--- Returns the tab whose close cross is under the cursor.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
+--- @return integer index One-based tab index, or 0.
+function TabPanel:hitTabClose(px, py)
+    local index = self:hitTab(px, py)
+    if index <= 0 then
+        return 0
+    end
+    local x, y, w, h = self:tabCloseRect(index)
+    if x == nil then
+        return 0
+    end
+    if px >= x and px < x + w and py >= y and py < y + h then
+        return index
+    end
+    return 0
+end
+
+--- Removes a tab and notifies `onClose`.
+--- @param index integer One-based tab index.
+function TabPanel:_closeTab(index)
+    local tab = self.tabs[index]
+    if tab == nil then
+        return
+    end
+    self:removeTab(index)
+    if self.onClose ~= nil then
+        self.onClose(self, index, tab)
+    end
 end
 
 -- Drawing --------------------------------------------------------------------
@@ -530,13 +664,15 @@ end
 --- @param aw number Tab width.
 --- @param ah number Tab height.
 --- @param textColor PallidColor Shaded text and default icon tint.
-function TabPanel:_drawTabContent(el, tab, ax, ay, aw, ah, textColor)
+--- @param closeW number|nil Width reserved for the close cross.
+function TabPanel:_drawTabContent(el, tab, ax, ay, aw, ah, textColor, closeW)
+    closeW = closeW or 0
     local title = tab.title or ""
     local hasIcon = tab._hasIcon == true
     local iconW = hasIcon and TAB_ICON or 0
     local showText = title ~= ""
     local gap = (hasIcon and showText) and TAB_ICON_GAP or 0
-    local maxText = math.max(0, aw - self.tabPadding * 2 - iconW - gap)
+    local maxText = math.max(0, aw - self.tabPadding * 2 - iconW - gap - closeW)
     local display = ""
     local textW = 0
 
@@ -555,7 +691,8 @@ function TabPanel:_drawTabContent(el, tab, ax, ay, aw, ah, textColor)
     end
 
     local groupW = textW + iconW + gap
-    local startX = ax + (aw - groupW) * 0.5
+    local available = math.max(0, aw - closeW)
+    local startX = ax + (available - groupW) * 0.5
     local textX = startX
     local iconX = startX
     local iconSide = tab.iconSide == "right" and "right" or "left"
@@ -590,6 +727,26 @@ function TabPanel:_drawTabContent(el, tab, ax, ay, aw, ah, textColor)
         style.alignH = baseAlign
         style.color = baseColor
     end
+end
+
+--- Draws the close cross of a closable tab.
+--- @param el ISUIElement Host element the tree is rendered into.
+--- @param index integer One-based tab index.
+--- @param ax number Absolute X of the tab.
+--- @param ay number Absolute Y of the tab.
+--- @param aw number Tab width.
+--- @param ah number Tab height.
+--- @param textColor PallidColor Fallback cross tint.
+function TabPanel:_drawTabClose(el, index, ax, ay, aw, ah, textColor)
+    if aw < CLOSE_W * 2 or not self:isTabClosable(index) then
+        return
+    end
+    local cx = ax + aw - CLOSE_W * 0.5 - 2
+    local cy = ay + ah * 0.5
+    local color = self._closeHover == index and Pallid.UI.Color.error or textColor
+    color = self:shade(color)
+    Pallid.UI.line(el, cx - CLOSE_MARK, cy - CLOSE_MARK, cx + CLOSE_MARK, cy + CLOSE_MARK, 1, color)
+    Pallid.UI.line(el, cx - CLOSE_MARK, cy + CLOSE_MARK, cx + CLOSE_MARK, cy - CLOSE_MARK, 1, color)
 end
 
 --- @param el ISUIElement Host element the arrow is drawn into.
@@ -694,7 +851,20 @@ function TabPanel:drawSelf(el)
                         self.tabRadius, 1, self:shade(TAB_ACCENT, 2))
                 end
 
-                self:_drawTabContent(el, tab, ax, ay, tw, th, textColor)
+                self:_drawTabContent(el, tab, ax, ay, tw, th, textColor, self:isTabClosable(i) and CLOSE_W or 0)
+                self:_drawTabClose(el, i, ax, ay, tw, th, textColor)
+                if self._dragMoved and self._dragIndex == i then
+                    Pallid.UI.roundedBorder(
+                        el,
+                        ax + TAB_INSET,
+                        ay + TAB_INSET,
+                        math.max(0, tw - TAB_INSET * 2),
+                        math.max(0, th - TAB_INSET * 2),
+                        self.tabRadius,
+                        1,
+                        self:shade(self.tabAccent)
+                    )
+                end
             else
                 if fill.a > 0.005 then
                     Pallid.UI.rect(el, vl, vt, vr - vl, vb - vt, fill)
@@ -704,7 +874,20 @@ function TabPanel:drawSelf(el)
                 -- group instead of drawing a text-only variant, otherwise the
                 -- icon pops in and out while the strip scrolls.
                 local entered = Pallid.UI.clip(el, RECT_SHAPE, vl, vt, vr - vl, vb - vt)
-                self:_drawTabContent(el, tab, ax, ay, tw, th, textColor)
+                self:_drawTabContent(el, tab, ax, ay, tw, th, textColor, self:isTabClosable(i) and CLOSE_W or 0)
+                self:_drawTabClose(el, i, ax, ay, tw, th, textColor)
+                if self._dragMoved and self._dragIndex == i then
+                    Pallid.UI.roundedBorder(
+                        el,
+                        ax + TAB_INSET,
+                        ay + TAB_INSET,
+                        math.max(0, tw - TAB_INSET * 2),
+                        math.max(0, th - TAB_INSET * 2),
+                        self.tabRadius,
+                        1,
+                        self:shade(self.tabAccent)
+                    )
+                end
                 if entered then
                     Pallid.UI.clipEnd(el)
                 end
@@ -772,6 +955,7 @@ function TabPanel:_refreshHover()
     end
     if not self:isInside(root.mouseX, root.mouseY) then
         self.hoverIndex = 0
+        self._closeHover = 0
         self._hoverArrow = nil
         return
     end
@@ -783,10 +967,12 @@ end
 function TabPanel:_updateHover(px, py)
     if not self.enabled then
         self.hoverIndex = 0
+        self._closeHover = 0
         self._hoverArrow = nil
         return
     end
     self.hoverIndex = self:hitTab(px, py)
+    self._closeHover = self:hitTabClose(px, py)
     self._hoverArrow = nil
     if not self._showArrows then
         return
@@ -820,6 +1006,13 @@ end
 --- @param now number Current time in seconds.
 --- @param dt number Seconds since the previous animation frame, 0..0.1.
 function TabPanel:onAnimate(now, dt)
+    -- Dragging near a strip edge scrolls continuously while the pointer is
+    -- held there, so a tab can be moved past the visible slice.
+    if self._dragMoved and self._dragDir ~= 0 and self._showArrows then
+        self:scrollBy(self._dragDir * 320 * dt)
+        self:_updateDragTarget()
+    end
+
     local scroll = self._scroll
     local scrollTarget = self._scrollTarget or scroll
     if scroll ~= scrollTarget then
@@ -886,6 +1079,7 @@ end
 
 --- Cleans up when the widget is detached from the tree.
 function TabPanel:onDetach()
+    self:_clearDrag()
     for i = 1, #self.tabs do
         local content = self.tabs[i].content
         if content ~= nil then
@@ -1033,6 +1227,138 @@ function TabPanel:findDown(px, py, ox, oy, button)
     return nil
 end
 
+--- Returns the tab index at a pointer position. Unlike `hitTab` this ignores
+--- the vertical strip bounds, so a drag can keep reordering even when the
+--- pointer drifts outside the strip.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
+--- @return integer index One-based tab index, or 0 when there are no tabs.
+function TabPanel:_tabIndexAtPointer(px, py)
+    if self._tabsDirty then
+        self:relayoutTabs()
+    end
+    local count = #self.tabs
+    if count == 0 then
+        return 0
+    end
+    local lx = px - self:originX()
+    local ly = py - self:originY()
+    local position
+    if self.position == "top" then
+        position = lx - self._stripX + self._scroll
+    else
+        position = ly - self._stripY + self._scroll
+    end
+
+    local total = self._tabX[count + 1] or 0
+    if position < 0 then
+        position = 0
+    elseif position >= total then
+        position = math.max(0, total - 1)
+    end
+
+    local low, high = 1, count
+    while low <= high do
+        local middle = math.floor((low + high) * 0.5)
+        local start = self._tabX[middle] or 0
+        local finish = start + (self._tabW[middle] or 0)
+        if position < start then
+            high = middle - 1
+        elseif position >= finish then
+            low = middle + 1
+        else
+            return middle
+        end
+    end
+    return count
+end
+
+--- Drops the drag state. Called when a tab drag ends or the panel detaches.
+function TabPanel:_clearDrag()
+    self._dragIndex = nil
+    self._dragMoved = false
+    self._dragPx = nil
+    self._dragPy = nil
+    self._dragDir = 0
+end
+
+--- Returns the auto-scroll direction for the current drag pointer.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
+--- @return integer direction -1 backwards, 1 forwards, 0 away from the edges.
+function TabPanel:_dragEdgeDirection(px, py)
+    if not self._showArrows then
+        return 0
+    end
+    local edge = 18
+    local lx = px - self:originX()
+    local ly = py - self:originY()
+    if self.position == "top" then
+        if lx < self._stripX + edge then
+            return -1
+        elseif lx > self._stripX + self._stripW - edge then
+            return 1
+        end
+    elseif ly < self._stripY + edge then
+        return -1
+    elseif ly > self._stripY + self._stripH - edge then
+        return 1
+    end
+    return 0
+end
+
+--- Reorders the dragged tab to the index under the last drag pointer.
+function TabPanel:_updateDragTarget()
+    local from = self._dragIndex
+    if from == nil or self._dragPx == nil then
+        return
+    end
+    local target = self:_tabIndexAtPointer(self._dragPx, self._dragPy)
+    if target > 0 and target ~= from then
+        -- `moveTab` normally scrolls the active tab into view; during a drag
+        -- that would cancel the edge auto-scroll set by onAnimate.
+        local scrollTarget = self._scrollTarget
+        self:moveTab(from, target)
+        self._scrollTarget = math.max(0, math.min(self._maxScroll or 0, scrollTarget or 0))
+        self._dragIndex = target
+    end
+end
+
+--- Continues a tab drag and reorders live under the pointer.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
+function TabPanel:onMove(px, py)
+    local from = self._dragIndex
+    if from == nil then
+        return
+    end
+    if self.tabs[from] == nil then
+        self:_clearDrag()
+        return
+    end
+
+    if not self._dragMoved then
+        local dx = px - self._dragStartX
+        local dy = py - self._dragStartY
+        if math.abs(dx) + math.abs(dy) < self._dragThreshold then
+            return
+        end
+        self._dragMoved = true
+    end
+
+    self._dragPx = px
+    self._dragPy = py
+    self._dragDir = self:_dragEdgeDirection(px, py)
+    self:_updateDragTarget()
+end
+
+--- Ends a tab drag.
+--- @param px number Cursor X in root-local coordinates.
+--- @param py number Cursor Y in root-local coordinates.
+function TabPanel:onUp(px, py)
+    self:_clearDrag()
+end
+
 --- Handles a pointer press inside the widget.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
@@ -1046,11 +1372,20 @@ function TabPanel:onDown(px, py, button)
     if button == "right" then
         return true
     end
+    local closeIndex = self:hitTabClose(px, py)
+    if closeIndex > 0 then
+        self:_closeTab(closeIndex)
+        return true
+    end
     local index = self:hitTab(px, py)
     if index == 0 then
         return false
     end
     self:setActive(index)
+    self._dragIndex = index
+    self._dragMoved = false
+    self._dragStartX = px
+    self._dragStartY = py
     return true
 end
 
@@ -1064,6 +1399,7 @@ end
 --- Clears hover state when the pointer leaves.
 function TabPanel:onHoverEnd()
     self.hoverIndex = 0
+    self._closeHover = 0
     self._hoverArrow = nil
     Widgets.Widget.onHoverEnd(self)
 end

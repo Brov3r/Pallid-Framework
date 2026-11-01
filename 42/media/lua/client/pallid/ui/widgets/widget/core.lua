@@ -343,6 +343,33 @@ function Widget:isInActiveClip()
     return not (x >= cx + cw or y >= cy + ch or x + self.w <= cx or y + self.h <= cy)
 end
 
+--- Returns the size the widget would like to occupy. The default is its current
+--- bounds; composite controls and auto-sized widgets override it so containers
+--- can lay them out without hard-coded sizes.
+--- @param maxW number|nil Available width in pixels; nil means unconstrained.
+--- @param maxH number|nil Available height in pixels; nil means unconstrained.
+--- @return number width Preferred width in pixels.
+--- @return number height Preferred height in pixels.
+function Widget:preferredSize(maxW, maxH)
+    return self.w, self.h
+end
+
+--- Returns the preferred width for an available height.
+--- @param maxH number|nil Available height in pixels.
+--- @return number width Preferred width in pixels.
+function Widget:preferredWidth(maxH)
+    local width = self:preferredSize(nil, maxH)
+    return width
+end
+
+--- Returns the preferred height for an available width.
+--- @param maxW number|nil Available width in pixels.
+--- @return number height Preferred height in pixels.
+function Widget:preferredHeight(maxW)
+    local _, height = self:preferredSize(maxW, nil)
+    return height
+end
+
 --- Draw entry point. Stores the parent origin, then draws self and children.
 --- @param el ISUIElement Host element the tree is rendered into.
 --- @param ox number Parent origin X inside `el`.

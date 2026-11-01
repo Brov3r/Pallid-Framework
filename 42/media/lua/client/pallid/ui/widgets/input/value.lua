@@ -572,6 +572,10 @@ return function(Input)
     --- read-only selection.
     --- @param key integer Keyboard.KEY_* value.
     function Input:onKeyPress(key)
+        local hook = self.onKeyPressOption
+        if hook ~= nil and hook(self, key) == true then
+            return true
+        end
         local keyboard = Keyboard
         local ctrl = keyboard ~= nil and keyboard.isKeyDown ~= nil
             and (keyboard.isKeyDown(keyboard.KEY_LCONTROL) or keyboard.isKeyDown(keyboard.KEY_RCONTROL))

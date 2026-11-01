@@ -65,6 +65,9 @@ end
 --- @field selected PallidTreeNode|nil Currently selected node.
 --- @field onSelect fun(tree: PallidTreeView, node: PallidTreeNode)|nil Called when a row is clicked.
 --- @field onToggle fun(tree: PallidTreeView, node: PallidTreeNode)|nil Called after a branch is expanded or collapsed.
+--- @field loadChildren fun(node: PallidTreeNode, done: fun(children: PallidTreeNode[]))|nil Lazy child loader, called once per node.
+--- @field checkable boolean True draws tri-state checkboxes and propagates checks.
+--- @field acceptsFocus boolean True lets the tree receive keyboard navigation.
 --- @field hoverRow integer Index of the hovered visible row; 0 when none.
 --- @field hoverPy number|nil Cursor Y that produced `hoverRow`; nil when not hovering.
 --- @field hoverT number Eased hover highlight amount, 0..1.
@@ -99,6 +102,10 @@ local TreeView = Widgets.class("TreeView")
 --- @field icon string|false|nil Texture path, registered icon name, or false to suppress the default icon.
 --- @field iconColor PallidColor|nil Tint for a custom icon; nil keeps the texture colours.
 --- @field onClick fun(node: PallidTreeNode)|nil Called after the node is selected.
+--- @field checked boolean|nil Tri-state check value; nil is indeterminate.
+--- @field _parent PallidTreeNode|nil Parent node maintained by the owning tree; do not edit.
+--- @field _loaded boolean|nil True after a lazy load completed; managed by the owning tree.
+--- @field _loading boolean|nil True while a lazy load is in flight; managed by the owning tree.
 --- @field _openT number|nil Eased expansion amount managed by the owning tree; do not edit.
 --- @field _openFull number|nil Full children-block height used to snap the animation; managed by the owning tree.
 
@@ -121,6 +128,8 @@ local TreeView = Widgets.class("TreeView")
 --- @field opts.chevronSize number|nil Chevron box size; defaults to rowHeight - 10, clamped to 8..12.
 --- @field opts.onSelect fun(tree: PallidTreeView, node: PallidTreeNode)|nil Called when a row is clicked.
 --- @field opts.onToggle fun(tree: PallidTreeView, node: PallidTreeNode)|nil Called after a branch is expanded or collapsed.
+--- @field opts.loadChildren fun(node: PallidTreeNode, done: fun(children: PallidTreeNode[]))|nil Called once when a node without children is expanded.
+--- @field opts.checkable boolean|nil True draws tri-state checkboxes and propagates checks.
 --- @return PallidTreeView tree New tree view instance.
 function TreeView.new(x, y, w, h, opts)
     opts = opts or {}
@@ -134,6 +143,9 @@ function TreeView.new(x, y, w, h, opts)
     self.barGap = opts.barGap
     self.onSelect = opts.onSelect
     self.onToggle = opts.onToggle
+    self.loadChildren = opts.loadChildren
+    self.checkable = opts.checkable == true
+    self.acceptsFocus = true
 
     self.rows = {}
     self.selected = nil
@@ -170,6 +182,11 @@ function TreeView.new(x, y, w, h, opts)
         leaf   = Pallid.UI.Textures.get(ICONS.leaf),
         arrow  = Pallid.UI.Textures.get(ICONS.arrow),
     }
+    self._checkTexture = Pallid.UI.Textures.get(ICON_DIR .. "tick.png")
+    self._checkSize = math.max(8, math.min(14, self.rowHeight - 8))
+    self.checkFill = Pallid.UI.Color.surfaceElevated
+    self.checkBorder = Pallid.UI.Color.border
+    self.checkColor = Pallid.UI.Color.primaryStrong
     -- Scratch colour for eased row fills; never allocated inside draw.
     self._rowFill = { r = 0, g = 0, b = 0, a = 1 }
     -- Reused rotation options for the chevron; never allocated inside draw.
@@ -248,7 +265,7 @@ function TreeView:rebuild()
     local maxDepth = 0
     local prune = false
     local animate = false
-    local function visit(nodes, depth)
+    local function visit(nodes, depth, parentNode)
         if type(nodes) ~= "table" then
             return
         end
@@ -256,11 +273,15 @@ function TreeView:rebuild()
             local node = nodes[i]
             if type(node) == "table" and not seen[node] then
                 seen[node] = true
+                node._parent = parentNode
                 if node._openT == nil then
                     node._openT = node.expanded and 1 or 0
                 end
                 local children = node.children
                 local hasChildren = type(children) == "table" and #children > 0
+                if not hasChildren and self.loadChildren ~= nil and children == nil and not node._loaded then
+                    hasChildren = true
+                end
                 if hasChildren and node._openT ~= (node.expanded and 1 or 0) then
                     animate = true
                 end
@@ -281,12 +302,12 @@ function TreeView:rebuild()
                     if not node.expanded then
                         prune = true
                     end
-                    visit(children, depth + 1)
+                    visit(children, depth + 1, node)
                 end
             end
         end
     end
-    visit(self.nodes, 0)
+    visit(self.nodes, 0, nil)
     self.rows = rows
     self._maxDepth = maxDepth
     self._prunePending = prune
@@ -396,6 +417,239 @@ function TreeView:expandAll(expanded)
     visit(self.nodes)
     self:rebuild()
     return self
+end
+
+--- Expands or collapses a node. A node without children asks `loadChildren`
+--- once; the returned children are inserted and the list is rebuilt.
+--- @param node PallidTreeNode|nil Node to toggle.
+function TreeView:_toggleNode(node)
+    if node == nil then
+        return
+    end
+    local children = node.children
+    local hasChildren = type(children) == "table" and #children > 0
+    local lazy = not hasChildren and self.loadChildren ~= nil
+        and children == nil and not node._loaded
+    if lazy then
+        if node._loading then
+            return
+        end
+        node._loading = true
+        node.expanded = true
+        self:rebuild()
+        local function done(result)
+            if not node._loading then
+                return
+            end
+            node._loading = false
+            node._loaded = true
+            node.children = type(result) == "table" and result or {}
+            node.expanded = #node.children > 0
+            self:rebuild()
+            if self.onToggle ~= nil then
+                self.onToggle(self, node)
+            end
+        end
+        local ok, err = pcall(self.loadChildren, node, done)
+        if not ok then
+            node._loading = false
+            node.expanded = false
+            self:rebuild()
+            Pallid.error("TreeView: loadChildren failed: " .. tostring(err))
+        end
+        return
+    end
+
+    node.expanded = not node.expanded
+    self:rebuild()
+    if self.onToggle ~= nil then
+        self.onToggle(self, node)
+    end
+end
+
+--- Applies a check state to a node and all of its descendants.
+--- @param node PallidTreeNode Node to update.
+--- @param state boolean|nil New tri-state value.
+function TreeView:_setCheckedRecursive(node, state)
+    node.checked = state
+    local children = node.children
+    if type(children) == "table" then
+        for i = 1, #children do
+            self:_setCheckedRecursive(children[i], state)
+        end
+    end
+end
+
+--- Recomputes ancestor check states from their children. All true becomes
+--- true, all false becomes false, and a mixed/nil set becomes nil.
+--- @param node PallidTreeNode|nil First ancestor to update.
+function TreeView:_updateAncestorChecks(node)
+    while node ~= nil do
+        local children = node.children
+        if type(children) == "table" and #children > 0 then
+            local first = children[1].checked
+            local same = true
+            for i = 2, #children do
+                if children[i].checked ~= first then
+                    same = false
+                    break
+                end
+            end
+            node.checked = same and first or nil
+        end
+        node = node._parent
+    end
+end
+
+--- Cycles a node check: true -> false -> nil -> true, then propagates to
+--- children and recomputes the ancestors.
+--- @param node PallidTreeNode Node to cycle.
+function TreeView:_cycleChecked(node)
+    local state = node.checked
+    local nextState
+    if state == true then
+        nextState = false
+    elseif state == false then
+        nextState = nil
+    else
+        nextState = true
+    end
+    self:_setCheckedRecursive(node, nextState)
+    self:_updateAncestorChecks(node._parent)
+end
+
+--- Returns the check box rectangle of a flattened row.
+--- @param index integer One-based row index.
+--- @return number|nil x Root-local X, or nil when checks are disabled.
+--- @return number|nil y Root-local Y.
+--- @return number|nil w Box width.
+--- @return number|nil h Box height.
+function TreeView:checkRect(index)
+    if not self.checkable then
+        return nil
+    end
+    local row = self.rows[index]
+    if row == nil then
+        return nil
+    end
+    local x = self:originX() + 8 + row.depth * self.indent + self.chevronSize + 4
+    local y = self:originY() + 1 + row.y - (self._scrollPx or 0)
+        + (self.rowHeight - self._checkSize) * 0.5
+    return x, y, self._checkSize, self._checkSize
+end
+
+--- Scrolls the target so a flattened row is fully visible.
+--- @param row table Flattened row descriptor.
+function TreeView:_ensureRowVisible(row)
+    local viewH = math.max(0, self.h - 2)
+    local top = row.y
+    local bottom = top + self.rowHeight
+    local target = self.scrollTarget or self.scrollY
+    if top < target then
+        target = top
+    elseif bottom > target + viewH then
+        target = bottom - viewH
+    end
+    self.scrollTarget = math.max(0, math.min(self.maxScroll or 0, target))
+end
+
+--- Selects a flattened row.
+--- @param index integer One-based row index.
+--- @param notify boolean|nil True calls `onSelect`.
+--- @return boolean selected True when the row exists.
+function TreeView:_selectIndex(index, notify)
+    local row = self.rows[index]
+    if row == nil then
+        return false
+    end
+    local node = row.node
+    if self.selected ~= node then
+        self.selected = node
+        self.selectT = 0
+    end
+    self:_ensureRowVisible(row)
+    if notify and self.onSelect ~= nil then
+        self.onSelect(self, node)
+    end
+    return true
+end
+
+--- Keyboard navigation: Up/Down move the selected row, Left/Right collapse and
+--- expand, Enter selects the current row and fires its click callback.
+--- @param key integer Keyboard.KEY_* value.
+--- @return boolean handled True when the tree consumed the key.
+function TreeView:onKeyPress(key)
+    if not self.enabled or not self.visible or Keyboard == nil then
+        return false
+    end
+    self:sync()
+    local rows = self.rows
+    if #rows == 0 then
+        return false
+    end
+
+    local index = 0
+    for i = 1, #rows do
+        if rows[i].node == self.selected then
+            index = i
+            break
+        end
+    end
+
+    if key == Keyboard.KEY_UP or key == Keyboard.KEY_DOWN then
+        if index == 0 then
+            index = 1
+        elseif key == Keyboard.KEY_UP then
+            index = math.max(1, index - 1)
+        else
+            index = math.min(#rows, index + 1)
+        end
+        self:_selectIndex(index, true)
+        return true
+    end
+
+    if key == Keyboard.KEY_LEFT then
+        if index == 0 then
+            return true
+        end
+        local row = rows[index]
+        if row.hasChildren and row.node.expanded then
+            self:_toggleNode(row.node)
+        end
+        return true
+    end
+
+    if key == Keyboard.KEY_RIGHT then
+        if index == 0 then
+            return true
+        end
+        local row = rows[index]
+        if row.hasChildren and not row.node.expanded then
+            self:_toggleNode(row.node)
+        elseif index < #rows and rows[index + 1].depth == row.depth + 1 then
+            self:_selectIndex(index + 1, true)
+        end
+        return true
+    end
+
+    if key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
+        if index == 0 then
+            index = 1
+        end
+        local row = rows[index]
+        if row == nil then
+            return true
+        end
+        self:_selectIndex(index, false)
+        if self.onSelect ~= nil then
+            self.onSelect(self, row.node)
+        end
+        if row.node.onClick ~= nil then
+            row.node.onClick(row.node)
+        end
+        return true
+    end
+    return false
 end
 
 --- Returns the row at the point.
@@ -509,6 +763,41 @@ function TreeView:drawSelf(el)
                 end
 
                 local labelX = tx + chevronSize + 4
+                if self.checkable then
+                    local checkSize = self._checkSize
+                    local checkX = labelX
+                    local checkY = midY - checkSize * 0.5
+                    if node.checked == true then
+                        Pallid.UI.roundedRect(el, checkX, checkY, checkSize, checkSize, 2, self:shade(self.checkBorder))
+                    else
+                        Pallid.UI.roundedRect(el, checkX, checkY, checkSize, checkSize, 2, self:shade(self.checkFill))
+                    end
+                    Pallid.UI.roundedBorder(el, checkX, checkY, checkSize, checkSize, 2, 1, self:shade(self.checkBorder))
+                    if node.checked == true then
+                        if self._checkTexture ~= nil then
+                            Pallid.UI.texture(
+                                el,
+                                self._checkTexture,
+                                checkX + 2,
+                                checkY + 2,
+                                checkSize - 4,
+                                checkSize - 4,
+                                self:shade(self.checkColor),
+                                ICON_OPTS
+                            )
+                        end
+                    elseif node.checked == nil then
+                        Pallid.UI.rect(
+                            el,
+                            checkX + 2,
+                            midY - 1,
+                            checkSize - 4,
+                            2,
+                            self:shade(self.chevronColor)
+                        )
+                    end
+                    labelX = labelX + checkSize + 6
+                end
                 local icon = node.icon
                 local iconColor
                 if icon == nil and self.defaultIcons then
@@ -654,12 +943,16 @@ function TreeView:onDown(px, py, button)
     local node = row.node
     local tx = self:originX() + 8 + row.depth * self.indent
 
-    if row.hasChildren and px >= tx - 2 and px <= tx + self.chevronSize + 2 then
-        node.expanded = not node.expanded
-        self:rebuild()
-        if self.onToggle ~= nil then
-            self.onToggle(self, node)
+    if self.checkable then
+        local checkX = tx + self.chevronSize + 4
+        if px >= checkX - 2 and px < checkX + self._checkSize + 2 then
+            self:_cycleChecked(node)
+            return true
         end
+    end
+
+    if row.hasChildren and px >= tx - 2 and px <= tx + self.chevronSize + 2 then
+        self:_toggleNode(node)
     else
         if self.selected ~= node then
             self.selected = node

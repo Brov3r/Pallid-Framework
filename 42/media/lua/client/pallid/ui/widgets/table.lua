@@ -26,6 +26,7 @@ local ICON_OPTS = { mode = "fit" }
 -- Bound per-row text caches. Tables can contain tens of thousands of rows and
 -- scrolling through all of them must not retain a layout table for every cell.
 local CELL_TEXT_CACHE_LIMIT = 512
+local DOUBLE_CLICK_MS = 400
 -- Candidate scrollbar states, fewest bars first. Evaluating all four avoids
 -- the oscillation where a vertical bar creates a horizontal one and back.
 local BAR_STATES = {
@@ -137,6 +138,9 @@ end
 --- @field sortColor PallidColor Active sort marker tint.
 --- @field dragFill PallidColor Drag-selection overlay fill.
 --- @field dragBorder PallidColor Drag-selection outline colour.
+--- @field footerHeight number Footer height in pixels; 0 disables the footer.
+--- @field drawFooter fun(el: ISUIElement, x: number, y: number, w: number, h: number)|nil Optional footer painter.
+--- @field onActivate fun(tableElement: PallidTable, row: table, index: integer)|nil Called on a row double-click.
 local Table = Widgets.class("Table")
 
 -- Sorting/selection and drawing live in table/view.lua / table/draw.lua.
@@ -179,6 +183,9 @@ addDrawMethods(Table)
 --- @field opts.onChange fun(tableElement: PallidTable)|nil Called after the selection changes.
 --- @field opts.onSort fun(tableElement: PallidTable, key: string|nil, ascending: boolean)|nil Called after a header sort changes.
 --- @field opts.onContext fun(tableElement: PallidTable, row: table, x: number, y: number)|nil Called on a row right-click with root-local cursor coordinates.
+--- @field opts.onActivate fun(tableElement: PallidTable, row: table, index: integer)|nil Called on a row double-click.
+--- @field opts.footerHeight number|nil Footer height in pixels; rows shrink by this amount.
+--- @field opts.drawFooter fun(el: ISUIElement, x: number, y: number, w: number, h: number)|nil Footer painter in root-local coordinates.
 --- @return PallidTable table New table instance.
 function Table.new(x, y, w, h, columns, rows, opts)
     opts = opts or {}
@@ -230,6 +237,7 @@ function Table.new(x, y, w, h, columns, rows, opts)
     self.rowHeight = math.max(1, math.floor(opts.rowHeight or ROW))
     self.headerHeight = math.max(0, math.floor(opts.headerHeight or HEADER))
     self._headerH = self.headerHeight
+    self._footerH = 0
     self.selectionMode = opts.selectionMode or "single"
     if self.selectionMode ~= "single" and self.selectionMode ~= "multi"
         and self.selectionMode ~= "none" then
@@ -253,6 +261,11 @@ function Table.new(x, y, w, h, columns, rows, opts)
     self.sortAsc = opts.sortAsc ~= false
     self.onChange = opts.onChange
     self.onContext = opts.onContext
+    self.onActivate = opts.onActivate
+    self.footerHeight = math.max(0, math.floor(opts.footerHeight or 0))
+    self.drawFooter = opts.drawFooter
+    self._lastActivateMs = nil
+    self._lastActivateIndex = 0
     -- Row-keyed text layouts, bounded by CELL_TEXT_CACHE_LIMIT rows. Only
     -- visible cells ever populate the cache; scrolling across a huge data set
     -- resets it instead of retaining one layout per row.
@@ -479,7 +492,9 @@ function Table:syncBars()
     local hPx = math.max(0, math.floor(self.h + 0.5))
     local headerHeight = math.min(self.headerHeight, hPx)
     self._headerH = headerHeight
-    local bodyH = math.max(0, hPx - headerHeight)
+    local footerHeight = math.min(math.max(0, math.floor(self.footerHeight or 0)), math.max(0, hPx - headerHeight))
+    self._footerH = footerHeight
+    local bodyH = math.max(0, hPx - headerHeight - footerHeight)
     local contentH = #self.view * self.rowHeight
     local barSize = math.max(1, math.floor(self.barSize + 0.5))
     local gap = math.max(0, math.floor((self.barGap or (math.min(wPx, hPx) < 80 and 3 or 5)) + 0.5))
@@ -767,6 +782,28 @@ function Table:refreshHover()
     end
 end
 
+--- Tracks row clicks and fires `onActivate` when two clicks land on the same
+--- row within the double-click interval.
+--- @param index integer One-based row index in `view`.
+--- @param button string|nil "left" or "right".
+function Table:_trackActivate(index, button)
+    if button == "right" then
+        self._lastActivateIndex = 0
+        self._lastActivateMs = nil
+        return
+    end
+    local now = getTimestampMs ~= nil and getTimestampMs() or 0
+    local previousIndex = self._lastActivateIndex
+    local previousMs = self._lastActivateMs
+    local isDouble = now > 0 and previousMs ~= nil and previousIndex == index
+        and (now - previousMs) <= DOUBLE_CLICK_MS
+    self._lastActivateIndex = index
+    self._lastActivateMs = now
+    if isDouble and self.onActivate ~= nil then
+        self.onActivate(self, self.view[index], index)
+    end
+end
+
 --- Handles a press on the header or the body.
 --- @param px number Cursor X in root-local coordinates.
 --- @param py number Cursor Y in root-local coordinates.
@@ -840,6 +877,7 @@ function Table:onDown(px, py, button)
         if self.onContext ~= nil then
             self.onContext(self, row, px, py)
         end
+        self:_trackActivate(index, "right")
         return true
     end
 
@@ -857,6 +895,7 @@ function Table:onDown(px, py, button)
         if self.onChange ~= nil then
             self.onChange(self)
         end
+        self:_trackActivate(index, "left")
         return true
     end
 
@@ -903,6 +942,7 @@ function Table:onDown(px, py, button)
             end
         end
     end
+    self:_trackActivate(index, "left")
     return true
 end
 

@@ -39,6 +39,9 @@ local RangeSlider = Widgets.class("RangeSlider", Slider)
 --- @field opts.step number|nil Snap step, defaults to 0.
 --- @field opts.showValue boolean|nil Enables the value bubbles and min/max labels.
 --- @field opts.format string|nil string.format pattern, defaults to "%.0f".
+--- @field opts.ticks number|table|nil Equal tick count, or explicit tick values.
+--- @field opts.tickSize number|nil Tick length in pixels, defaults to 4.
+--- @field opts.tickColor PallidColor|nil Tick colour, defaults to textDisabled.
 --- @field opts.onChange fun(slider: PallidRangeSlider, low: number, high: number)|nil Callback after a value change.
 --- @return PallidRangeSlider slider New range slider instance.
 function RangeSlider.new(x, y, w, h, opts)
@@ -245,6 +248,7 @@ function RangeSlider:drawSelf(el)
         Pallid.UI.roundedRect(el, lowX, y - TRACK_THICKNESS * 0.5, fillW, TRACK_THICKNESS,
             TRACK_THICKNESS * 0.5, self:shade(self.fillColor))
     end
+    self:drawTicks(el, left, y, width, 0)
 
     Pallid.UI.circle(el, lowX, y, KNOB_RADIUS, self:shade(self.knobBorder))
     Pallid.UI.circle(el, lowX, y, KNOB_RADIUS - 1, self:shade(self.knobColor))

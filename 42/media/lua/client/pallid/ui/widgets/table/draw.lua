@@ -435,6 +435,19 @@ return function(Table)
             end
         end
 
+        local footerHeight = self._footerH or 0
+        if footerHeight > 0 then
+            local footerY = y + self.h - footerHeight
+            Pallid.UI.rect(el, x, footerY, self.w, 1, self:shade(self.borderColor))
+            if self.drawFooter ~= nil then
+                local footerClip = Pallid.UI.clip(el, RECT_SHAPE, x, footerY, self.w, footerHeight)
+                if footerClip then
+                    self.drawFooter(el, x, footerY, self.w, footerHeight)
+                    Pallid.UI.clipEnd(el)
+                end
+            end
+        end
+
         if headerHeight > 0 then
             Pallid.UI.rect(el, x, y + headerHeight - 1, self.w, 1, self:shade(self.borderColor))
         end

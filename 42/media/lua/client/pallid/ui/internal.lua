@@ -67,6 +67,16 @@ function I.translate(key, fallback)
     return getTextOrNull(key) or fallback
 end
 
+--- Public translation helper for widgets. New widgets use this instead of
+--- hard-coding user-visible English text, so every label can be translated
+--- through the mod's UI.json files.
+--- @param key string Translation key from this mod's `UI.json`.
+--- @param fallback string English text used when the key has no translation.
+--- @return string text Localized text, or `fallback` when the key is absent.
+function Pallid.UI.translate(key, fallback)
+    return I.translate(key, fallback)
+end
+
 --- Clamps a value into the inclusive range [lo, hi]. If lo > hi, lo wins.
 --- @param value number Value to clamp.
 --- @param lo number Inclusive lower bound.

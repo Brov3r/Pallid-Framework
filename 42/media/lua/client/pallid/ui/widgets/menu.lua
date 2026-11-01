@@ -594,3 +594,132 @@ function Menu:onWheel(delta)
     end
     return true
 end
+
+--- Moves the keyboard highlight and keeps the row inside the viewport.
+--- @param index integer One-based item index; 0 clears the highlight.
+function Menu:_ensureHoverVisible(index)
+    if index <= 0 then
+        self.hover = 0
+        return
+    end
+    self.hover = index
+    local top = self._itemY and self._itemY[index] or 0
+    local height = self._itemH and self._itemH[index] or self.itemHeight
+    local viewTop = self.scrollY
+    local viewBottom = viewTop + (self._viewH or self.h)
+    if top < viewTop then
+        self.scrollY = top
+    elseif top + height > viewBottom then
+        self.scrollY = top + height - (self._viewH or self.h)
+    end
+    self.scrollY = math.max(0, math.min(self._maxScroll or 0, self.scrollY))
+end
+
+--- @param index integer Candidate item index.
+--- @return boolean activatable True for a real, enabled, non-separator row.
+function Menu:_isActivatable(index)
+    local item = self.items[index]
+    return item ~= nil and not item.separator and not item.disabled
+end
+
+--- Finds the next activatable item in a direction.
+--- @param from integer Starting index; 0 starts from the edge.
+--- @param step integer 1 for down, -1 for up.
+--- @return integer index Activatable index, or 0 when none exists.
+function Menu:_nextActivatable(from, step)
+    local count = #self.items
+    local index = from
+    for _ = 1, count do
+        index = index + step
+        if index < 1 or index > count then
+            return 0
+        end
+        if self:_isActivatable(index) then
+            return index
+        end
+    end
+    return 0
+end
+
+--- Activates an item exactly like a mouse click.
+--- @param index integer One-based item index.
+--- @return boolean handled True when the item was activated.
+function Menu:_activateItem(index)
+    local item = self.items[index]
+    if item == nil or item.separator or item.disabled then
+        return true
+    end
+    if item.submenu ~= nil then
+        self:_playSound()
+        self:openAt(index)
+        return true
+    end
+
+    local toggled = self.checkable and item.checkable
+    if toggled then
+        self:_toggleChecked(index)
+    end
+    self:_playSound()
+    if self.closeOnSelect and not toggled then
+        self:closeChain()
+    end
+    if item.onClick ~= nil then
+        item.onClick(item, self)
+    end
+    return true
+end
+
+--- Keyboard navigation for an open menu. Up/Down skip separators and disabled
+--- rows, Enter activates or opens a submenu, and Escape closes the whole chain.
+--- @param key integer Keyboard.KEY_* value.
+--- @return boolean handled True when the menu consumed the key.
+function Menu:onKeyPress(key)
+    if not self.visible or not self.enabled or Keyboard == nil then
+        return false
+    end
+
+    local submenu = self.openSubmenu
+    if submenu ~= nil and submenu.visible then
+        if key == Keyboard.KEY_ESCAPE then
+            self:closeChain()
+            return true
+        end
+        if submenu:onKeyPress(key) then
+            return true
+        end
+    end
+
+    if key == Keyboard.KEY_UP or key == Keyboard.KEY_DOWN then
+        local step = key == Keyboard.KEY_UP and -1 or 1
+        local from = self.hover
+        if from <= 0 then
+            from = step > 0 and 0 or (#self.items + 1)
+        end
+        local index = self:_nextActivatable(from, step)
+        if index == 0 and from ~= 0 then
+            -- Clamp at the edge instead of wrapping around.
+            index = self.hover
+        end
+        if index ~= 0 then
+            self:_ensureHoverVisible(index)
+        end
+        return true
+    end
+
+    if key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
+        if self.hover <= 0 then
+            local first = self:_nextActivatable(0, 1)
+            if first == 0 then
+                return true
+            end
+            self:_ensureHoverVisible(first)
+        end
+        return self:_activateItem(self.hover)
+    end
+
+    if key == Keyboard.KEY_ESCAPE then
+        self:closeChain()
+        return true
+    end
+    return false
+end

@@ -303,6 +303,24 @@ function Button:drawSelf(el)
     self:drawContent(el, x, y)
 end
 
+--- Returns the width needed for the label and icon at the current height.
+--- @param maxW number|nil Available width in pixels.
+--- @param maxH number|nil Available height in pixels.
+--- @return number width Preferred width in pixels.
+--- @return number height Preferred height in pixels.
+function Button:preferredSize(maxW, maxH)
+    local height = self.h
+    local iconSize = math.max(0, math.min(height - self.iconInset, (maxW or self.w) - self.iconInset))
+    local iconW = iconSize > 0 and self:hasIcon() and iconSize or 0
+    local textW = self.text ~= "" and getTextManager():MeasureStringX(self.style.font, self.text) or 0
+    local gap = (iconW > 0 and textW > 0) and GAP or 0
+    local width = PADDING * 2 + iconW + gap + textW
+    if maxW ~= nil and width > maxW then
+        width = maxW
+    end
+    return width, height
+end
+
 --- Draws the centred icon/text pair. The label is truncated with an ellipsis
 --- when it does not fit, so it never spills outside the button.
 --- @param el ISUIElement Host element the tree is rendered into.

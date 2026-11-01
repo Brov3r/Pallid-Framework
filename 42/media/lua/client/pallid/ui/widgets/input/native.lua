@@ -67,4 +67,26 @@ return function(Input)
             self.box:setVisible(false)
         end
     end
+
+    --- Hides and blurs the native box when the input leaves the tree. Detached
+    --- editors are recreated by composite widgets such as QueryBuilder, and a
+    --- focused native box would otherwise stay always-on-top over the new row.
+    function Input:onDetach()
+        if self.box ~= nil then
+            if self.box:isFocused() then
+                self.box:unfocus()
+            end
+            self.box:setVisible(false)
+        end
+        local root = self._nativeRoot
+        if root ~= nil then
+            if root.focused == self then
+                root.focused = nil
+            end
+            if root.unregisterNative ~= nil then
+                root:unregisterNative(self)
+            end
+            self._nativeRoot = nil
+        end
+    end
 end

@@ -2,6 +2,7 @@ require "pallid/ui/internal"
 require "pallid/ui/api/color"
 require "pallid/ui/api/draw"
 require "pallid/ui/api/mask"
+require "pallid/ui/api/clip"
 require "pallid/ui/widgets/widget"
 
 local addValueMethods = require "pallid/ui/widgets/input/value"
@@ -106,6 +107,7 @@ local Input = Widgets.class("InputBase")
 --- @field opts.transparent boolean|nil True draws no widget or native chrome.
 --- @field opts.onChange fun(input: PallidInputBase, text: string, raw: string)|nil Called after the value changes.
 --- @field opts.onSubmit fun(input: PallidInputBase, text: string, raw: string)|nil Called when Enter is pressed.
+--- @field opts.onKeyPress fun(input: PallidInputBase, key: integer): boolean|nil Optional key hook. Returning true consumes the key before the built-in editor shortcuts.
 --- @return PallidInputBase self The initialized base widget.
 function Input:initInput(x, y, w, h, opts)
     opts = I.copyTable(opts)
@@ -114,6 +116,7 @@ function Input:initInput(x, y, w, h, opts)
     self.text = opts.text or ""
     self.onChange = opts.onChange
     self.onSubmit = opts.onSubmit
+    self.onKeyPressOption = opts.onKeyPress
     self.acceptsFocus = true
     self.multiline = opts.multiline or false
     self.maxLength = opts.maxLength or 0
@@ -350,11 +353,29 @@ function Input:drawSelf(el)
     local paddingX = self.paddingX or 0
     local paddingY = self.paddingY or 0
     local inset = self.inset or 2
-    box:setX(absX + paddingX - inset)
-    box:setY(absY + paddingY - inset)
-    box:setWidth(math.max(1, self.w - paddingX * 2 + inset * 2 - (self.rightInset or 0)))
-    box:setHeight(math.max(1, self.h - paddingY * 2 + inset * 2))
-    box:setVisible(true)
+    local boxX = absX + paddingX - inset
+    local boxY = absY + paddingY - inset
+    local boxW = math.max(1, self.w - paddingX * 2 + inset * 2 - (self.rightInset or 0))
+    local boxH = math.max(1, self.h - paddingY * 2 + inset * 2)
+    box:setX(boxX)
+    box:setY(boxY)
+    box:setWidth(boxW)
+    box:setHeight(boxH)
+
+    -- Native text boxes are always-on-top UIManager elements and cannot be
+    -- stencilled. Hide one that is not fully inside the active software clip:
+    -- a text box belonging to a half-scrolled row would otherwise draw over the
+    -- scroll panel, the toolbar and its neighbours.
+    local clipX, clipY, clipW, clipH = Pallid.UI.clipRect()
+    local visible = true
+    if clipX ~= nil then
+        if clipW <= 0 or clipH <= 0
+            or boxX < clipX or boxY < clipY
+            or boxX + boxW > clipX + clipW or boxY + boxH > clipY + clipH then
+            visible = false
+        end
+    end
+    box:setVisible(visible)
 
     self._nativeLocalX = x
     self._nativeLocalY = y

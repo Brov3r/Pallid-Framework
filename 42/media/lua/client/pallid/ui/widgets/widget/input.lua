@@ -539,6 +539,15 @@ function Widget:keyPress(key)
         return true
     end
 
+    -- An open menu takes keys before the focused widget: menu buttons usually
+    -- keep focus on the control that opened them.
+    local menu = self.openMenu
+    if menu ~= nil and menu.onKeyPress ~= nil
+        and menu.onKeyPress ~= Widget.onKeyPress
+        and menu:onKeyPress(key) then
+        return true
+    end
+
     local target = self.focused
     if target ~= nil and target.visible then
         target:onKeyPress(key)
