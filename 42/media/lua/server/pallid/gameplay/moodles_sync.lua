@@ -6,83 +6,116 @@ Pallid = Pallid or {}
 local Moodles = Pallid.Moodles
 local logger = Pallid.getLogger("MoodlesSync")
 
---- Maximum number of moodle commands accepted from one player per window.
-local MAX_REQUESTS = 20
+-- The server Lua directory is loaded on multiplayer clients too. Register the
+-- handlers only where server commands are actually dispatched.
+if not Pallid.Net.isAuthority() then
+    return Pallid
+end
 
---- Request window length in milliseconds.
-local REQUEST_WINDOW_MS = 10000
+--- Minimum interval between repeated moodle rejection log lines.
+local REJECT_LOG_INTERVAL_MS = 5000
 
---- Per-player rate-limit state keyed by online id.
----@type table<number, table>
-local requestWindows = {}
+--- Maximum number of characters kept from a rejected moodle id.
+local REJECT_ID_LIMIT = 64
 
---- Returns whether a player may send another moodle command.
----@param player IsoPlayer Player sending the command.
----@return boolean allowed True when the request is inside the rate limit.
-local function allowRequest(player)
-    local onlineID = player:getOnlineID()
-    if onlineID == nil then
-        return true
+--- Timestamp of the last unknown-id warning.
+local lastUnknownIdWarnMs = 0
+
+--- Timestamp of the last server-owned moodle warning.
+local lastServerOwnedWarnMs = 0
+
+--- Truncates and escapes a client-supplied id before logging it.
+---@param id string Moodle id received from a client.
+---@return string text Safe log text.
+local function sanitizeId(id)
+    local text = tostring(id)
+    if #text > REJECT_ID_LIMIT then
+        text = string.sub(text, 1, REJECT_ID_LIMIT) .. "..."
     end
+    return (string.gsub(text, "%c", "?"))
+end
 
+--- Logs an unknown moodle id with throttling.
+---@param id string Rejected moodle id.
+local function warnUnknownId(id)
     local now = getTimestampMs()
-    local window = requestWindows[onlineID]
-
-    if window == nil or now - window.startedAt >= REQUEST_WINDOW_MS then
-        requestWindows[onlineID] = { startedAt = now, count = 1 }
-        return true
+    if now - lastUnknownIdWarnMs < REJECT_LOG_INTERVAL_MS then
+        return
     end
 
-    window.count = window.count + 1
-    return window.count <= MAX_REQUESTS
+    lastUnknownIdWarnMs = now
+    logger:warn("ignored moodle update for unknown id:", sanitizeId(id))
 end
 
---- Handles a moodle state request from a client.
----@param player IsoPlayer Requesting player.
-local function handleRequest(player)
+--- Logs a client attempt to set a server-owned moodle with throttling.
+---@param id string Rejected moodle id.
+local function warnServerOwned(id)
+    local now = getTimestampMs()
+    if now - lastServerOwnedWarnMs < REJECT_LOG_INTERVAL_MS then
+        return
+    end
+
+    lastServerOwnedWarnMs = now
+    logger:warn("ignored client update for a server-owned moodle:", sanitizeId(id))
+end
+
+--- Answers a client request with the full authoritative moodle state.
+---
+--- The limit mirrors the previous moodle budget: 20 commands per 10 seconds.
+Pallid.Net.onServer(Moodles._ACTION_REQUEST, {
+    limit = {
+        max    = 20,
+        window = 10000,
+    },
+}, function(player)
+    if player == nil then
+        return
+    end
+
     Moodles._sendState(player, Moodles._collectValues(player))
-end
+end)
 
---- Handles a client request to change one of its own moodle values.
----@param player IsoPlayer Requesting player.
----@param args table|nil Command arguments.
-local function handleSet(player, args)
-    if type(args) ~= "table" or type(args.id) ~= "string" then
+--- Applies a client moodle update and echoes the clamped value back.
+---
+--- Only moodles registered with `clientWritable = true` accept client writes;
+--- gameplay-relevant moodles stay server-authoritative by default.
+Pallid.Net.onServer(Moodles._ACTION_SET, {
+    limit  = {
+        max    = 20,
+        window = 10000,
+    },
+    schema = {
+        id    = {
+            type      = "string",
+            maxLength = 256,
+        },
+        value = "number",
+    },
+}, function(player, payload)
+    if player == nil then
         return
     end
 
-    local definition = Moodles.get(args.id)
+    local definition = Moodles.get(payload.id)
     if definition == nil then
-        logger:warn("ignored moodle update for unknown id:", tostring(args.id))
+        warnUnknownId(payload.id)
         return
     end
 
-    local value = Moodles._clampValue(args.value)
-    Moodles._applyValue(player, definition.id, value)
+    if not definition.clientWritable then
+        warnServerOwned(payload.id)
+        return
+    end
+
+    -- Second-level defence: the schema only checks the type, while the
+    -- gameplay layer keeps values inside 0..1.
+    local value = Moodles._clampValue(payload.value)
+    if not Moodles._applyValue(player, definition.id, value) then
+        logger:warn("failed to apply moodle:", sanitizeId(definition.id))
+        return
+    end
+
     Moodles._sendState(player, { [definition.id] = value })
-end
-
---- Receives validated moodle commands from clients.
-Events.OnClientCommand.Add(function(module, command, player, args)
-    if module ~= Moodles._NET_MODULE or player == nil then
-        return
-    end
-
-    if command ~= Moodles._NET_REQUEST and command ~= Moodles._NET_SET then
-        return
-    end
-
-    if not allowRequest(player) then
-        logger:warn("rate-limited moodle command from", tostring(player:getUsername()))
-        Moodles._sendState(player, Moodles._collectValues(player))
-        return
-    end
-
-    if command == Moodles._NET_REQUEST then
-        handleRequest(player)
-    else
-        handleSet(player, args)
-    end
 end)
 
 return Pallid

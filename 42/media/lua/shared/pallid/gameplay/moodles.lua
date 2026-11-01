@@ -1,4 +1,5 @@
 require "utils/logger"
+require "pallid/net/core"
 
 Pallid = Pallid or {}
 Pallid.Moodles = Pallid.Moodles or {}
@@ -6,17 +7,14 @@ Pallid.Moodles = Pallid.Moodles or {}
 local Moodles = Pallid.Moodles
 local logger = Pallid.getLogger("Moodles")
 
---- Network module name used by the moodle state commands.
-Moodles._NET_MODULE = "Pallid_Moodles"
+--- Action sent by a client to change one of its own moodle values.
+Moodles._ACTION_SET = "Moodles_set"
 
---- Command sent by a client to change one of its own moodle values.
-Moodles._NET_SET = "Pallid_set"
+--- Action sent by a client to request all of its moodle values.
+Moodles._ACTION_REQUEST = "Moodles_request"
 
---- Command sent by a client to request all of its moodle values.
-Moodles._NET_REQUEST = "Pallid_request"
-
---- Command sent by the server with authoritative moodle values.
-Moodles._NET_STATE = "Pallid_state"
+--- Action sent by the server with authoritative moodle values.
+Moodles._ACTION_STATE = "Moodles_state"
 
 --- Neutral value; a moodle at this value is not displayed.
 local NEUTRAL_VALUE = 0.5
@@ -25,7 +23,7 @@ local NEUTRAL_VALUE = 0.5
 local MOD_DATA_KEY = "Pallid_Moodles"
 
 --- Default thresholds copied into every definition.
----@type table<string, number>
+---@type table<string, number> Default threshold values keyed by level name.
 local DEFAULT_THRESHOLDS = {
     bad4  = 0.1,
     bad3  = 0.2,
@@ -47,6 +45,7 @@ local DEFAULT_THRESHOLDS = {
 ---@field thresholds table|nil Partial threshold overrides merged with the defaults.
 ---@field priority number|nil Drawing order; lower values are drawn first.
 ---@field draw boolean|nil When false the built-in renderer skips this moodle.
+---@field clientWritable boolean|nil When true a client may set this moodle through `Moodles_set`. Defaults to false so gameplay-relevant state stays server-authoritative.
 
 --- Registered moodle definition returned by Pallid.Moodles.add.
 ---@class PallidMoodle
@@ -59,15 +58,16 @@ local DEFAULT_THRESHOLDS = {
 ---@field thresholds table<string, number> Instance-owned thresholds.
 ---@field priority number Drawing order.
 ---@field draw boolean Whether the built-in renderer draws this moodle.
+---@field clientWritable boolean Whether a client may set this moodle.
 local PallidMoodle = {}
 PallidMoodle.__index = PallidMoodle
 
 --- Registered moodles keyed by normalized id.
----@type table<string, PallidMoodle>
+---@type table<string, PallidMoodle> Registered definitions keyed by normalized id.
 Moodles._definitions = {}
 
 --- Registered moodles sorted by priority and registration order.
----@type PallidMoodle[]
+---@type PallidMoodle[] Definitions in draw order.
 Moodles._order = {}
 
 --- Returns the lower-case registry id used by ResourceLocation.
@@ -192,14 +192,17 @@ function Moodles._collectValues(player)
 end
 
 --- Sends authoritative values to the owning client.
+---
+--- The transport is `Pallid.Net`. In singleplayer the client handler is called
+--- locally because the native server command transport does nothing there.
 ---@param player IsoPlayer Player receiving the update.
 ---@param values table<string, number> values Changed values.
 function Moodles._sendState(player, values)
-    if not isServer() or player == nil or not instanceof(player, "IsoPlayer") then
+    if player == nil or not instanceof(player, "IsoPlayer") then
         return
     end
 
-    local ok, err = pcall(sendServerCommand, player, Moodles._NET_MODULE, Moodles._NET_STATE, {
+    local ok, err = Pallid.Net.send(player, Moodles._ACTION_STATE, {
         onlineID = player:getOnlineID(),
         values   = values,
     })
@@ -285,6 +288,11 @@ function Moodles.add(spec)
         return nil, "icon required"
     end
 
+    if spec.clientWritable ~= nil and type(spec.clientWritable) ~= "boolean" then
+        logger:error("clientWritable must be a boolean for", spec.id)
+        return nil, "invalid clientWritable"
+    end
+
     local id = normalizeId(spec.id)
     if Moodles._definitions[id] ~= nil then
         logger:error("moodle already registered:", id)
@@ -310,15 +318,16 @@ function Moodles.add(spec)
     end
 
     local definition = setmetatable({
-        id          = id,
-        spec        = spec,
-        icon        = spec.icon,
-        icons       = spec.icons,
-        title       = spec.title,
-        description = spec.description,
-        thresholds  = thresholds,
-        priority    = priority,
-        draw        = spec.draw ~= false,
+        id             = id,
+        spec           = spec,
+        icon           = spec.icon,
+        icons          = spec.icons,
+        title          = spec.title,
+        description    = spec.description,
+        thresholds     = thresholds,
+        priority       = priority,
+        draw           = spec.draw ~= false,
+        clientWritable = spec.clientWritable == true,
     }, PallidMoodle)
 
     Moodles._definitions[id] = definition
@@ -385,6 +394,11 @@ function Moodles.setValue(player, id, value)
         return false
     end
 
+    if not isServer() and isClient() and not definition.clientWritable then
+        logger:warn("ignored client update for a server-owned moodle:", definition.id)
+        return false
+    end
+
     if not isServer() and isClient() and instanceof(player, "IsoPlayer")
         and not player:isLocalPlayer() then
         logger:warn("ignored moodle update for a remote player on a client:", definition.id)
@@ -404,7 +418,7 @@ function Moodles.setValue(player, id, value)
     if isServer() then
         Moodles._sendState(player, { [definition.id] = clamped })
     elseif isClient() and instanceof(player, "IsoPlayer") then
-        local ok, err = pcall(sendClientCommand, player, Moodles._NET_MODULE, Moodles._NET_SET, {
+        local ok, err = Pallid.Net._sendToServerAs(player, Moodles._ACTION_SET, {
             id    = definition.id,
             value = clamped,
         })
